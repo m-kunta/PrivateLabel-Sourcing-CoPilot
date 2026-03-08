@@ -75,7 +75,7 @@ Three functional tabs:
 
 | Tab | Purpose |
 |-----|---------|
-| **Scenario Analyzer** | Enter a "what-if" question, set disruption magnitude, get risk table + briefing |
+| **Scenario Analyzer** | Enter a "what-if" question, set disruption magnitude, get risk table + briefing. Features the **"Hormuz" Event Toggle** for 2026 geopolitical fuel/routing modeling. |
 | **Risk Dashboard** | Visual overview of all components by risk exposure and lead time |
 | **Data Hub** | Ingest/refresh lead time CSV and disruption news into Pinecone |
 
@@ -172,6 +172,7 @@ Heuristic baseline coefficients (grounded in historical freight data):
 | Suez Canal closure (Red Sea) | 1.40 | Cape of Good Hope detour adds ~14 days |
 | West Africa port congestion | 1.25 | Tema/Abidjan congestion typical +5–8 days |
 | Bangladesh flooding | 1.30 | Chittagong inland road disruption +7–12 days |
+| Strait of Hormuz Blockage | 1.45 | Massive fuel surcharge spike (+15-30% costs) and extensive Middle East rerouting |
 
 The LLM reasons about the coefficient contextually — e.g., a Panama Canal disruption has a higher coefficient for furniture (heavy, slow transit, bulk cargo) than for textiles (can reroute via air at marginal cost).
 
@@ -335,6 +336,8 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
  around the Cape of Good Hope and by how many days?"
 
 "Which of our apparel components have the highest combined risk from Panama Canal + Savannah exposure?"
+
+"With the 2026 tensions escalating, what is the fuel surcharge and transit delay impact on our Asian imports if the Strait of Hormuz is blocked?"
 ```
 
 ---
@@ -349,6 +352,7 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 - [ ] `llm_providers.py` — multi-provider LLM factory
 - [ ] `scenario_engine.py` — RAG + LLM reasoning chain
 - [ ] `app.py` — Streamlit dashboard (3 tabs)
+- [ ] The "Hormuz" Event Toggle (2026 Geopolitical scenario modeling)
 - [ ] Integration testing
 - [ ] News API integration (upgrade from RSS scraping)
 - [ ] Real-time Pinecone update pipeline
