@@ -1,0 +1,32 @@
+# --- Secrets ---
+.env
+
+# --- Virtual Environment ---
+.venv/
+venv/
+env/
+
+# --- Database (generated at runtime) ---
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- macOS ---
+.DS_Store
+
+# --- IDE ---
+.vscode/
+.idea/
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+
+# --- AI Agent Logs ---
+claude.md
+CLAUDE.md
