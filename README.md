@@ -6,7 +6,9 @@
 
 **PL Sourcing Co-Pilot** is a RAG-powered AI prototype that answers strategic supply chain "what-if" questions for private label buyers. It combines a Pinecone vector knowledge base (vendor lead times + live disruption news) with an LLM reasoning chain to generate risk-ranked component tables and professional analyst briefings — in seconds.
 
-![Scenario Analyzer UI Placeholder](assets/scenario_analyzer_preview.png)
+![Scenario Analyzer UI](assets/screenshot_scenario_analyzer.png)
+
+> **✅ Pinecone Active** | **🧠 Multi-LLM** | **📊 Risk Dashboard** | **🔴 Hormuz Toggle**
 
 ---
 
@@ -369,6 +371,37 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 | UI | Streamlit | Consistent with sibling projects; rapid prototyping |
 | News ingestion | `feedparser` + curated mock events | RSS is free; mock events ensure demo stability |
 | Data | Pandas + SQLite (future) | Same stack as `dc_outbound_smoothing` |
+
+---
+
+## Risk Dashboard
+
+![Risk Dashboard](assets/screenshot_risk_dashboard.png)
+
+---
+
+## Changelog
+
+### v0.2.0 — 2026-03-09 (Live Testing Fixes)
+
+#### Bug Fixes
+- **[Critical] JSON Truncation in Scenario Analysis** — The LLM was being asked to write the entire risk table as a single large JSON blob, causing response truncation even with high token limits. The `analyze_scenario` method in `scenario_engine.py` was refactored to a **two-step approach**: Python now computes the `risk_table` directly from Pinecone vector results, and the LLM is only asked to generate the smaller `briefing` and `ripple_effects` sections.
+- **[Critical] Quick Toggle Buttons Not Working** — Streamlit's `text_area` widget manages its value via `st.session_state[widget_key]`. The toggle button callbacks were updating a separate `scenario_text` key that Streamlit ignores after first render. Fixed by writing directly to `st.session_state['scenario_input']`.
+- **[Medium] Pinecone Package Rename** — Replaced deprecated `pinecone-client` with the official `pinecone` package (Pinecone's official SDK rename).
+- **[Medium] LLM Token Limit** — Raised `max_output_tokens` from 2000 → 8192 across all providers (Anthropic, OpenAI, Gemini, Groq) to accommodate large scenario outputs.
+- **[Low] Missing Plotly Dependency** — Added `plotly` to `requirements.txt`.
+- **[Low] dotenv Override** — Added `override=True` to `load_dotenv()` so `.env` keys always take precedence when restarting.
+
+#### Features
+- **Middle East / Israel keyword mapping** — Scenarios mentioning "Israel", "Egypt", or "Middle East" now correctly route to the Hormuz disruption coefficient.
+
+### v0.1.0 — 2026-03-08 (Initial Release)
+- Full RAG architecture with Pinecone two-namespace design (`lead_times` + `disruptions`)
+- Multi-provider LLM factory (Anthropic, OpenAI, Gemini, Groq, Ollama)
+- Streamlit dashboard with Scenario Analyzer, Risk Dashboard, and Data Hub tabs
+- The "Hormuz" Event Toggle (2026 geopolitical scenario)
+- Graceful degradation to heuristic mode when Pinecone is offline
+- Synthetic vendor lead time data generation (`data_gen.py`)
 
 ---
 
