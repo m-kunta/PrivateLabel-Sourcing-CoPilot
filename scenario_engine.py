@@ -81,7 +81,7 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
             except json.JSONDecodeError:
                 pass
                 
-        raise ValueError("Failed to parse LLM response into JSON.")
+        raise ValueError(f"Failed to parse LLM response into JSON. Raw output: {text[:200]}...")
 
     def _classify_risk(self, base: int, adjusted: int) -> str:
         ratio = adjusted / base if base > 0 else 1.0
@@ -179,19 +179,86 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         lead_time_context = self.vs.query(scenario, "lead_times", top_k=15)
         disruption_context = self.vs.query(scenario, "disruptions", top_k=5)
         
-        context = "Relevant Component Lead Times (from Vector DB):\n"
-        context += json.dumps(lead_time_context, indent=2) + "\n\n"
-        context += "Relevant Geopolitical/Disruption Intelligence (from Vector DB):\n"
-        context += json.dumps(disruption_context, indent=2) + "\n\n"
-        context += f"User What-If Scenario: {scenario}"
+        # --- Step 1: Compute risk table in Python from retrieved vector data ---
+        # Derive the disruption coefficient from the scenario text
+        scenario_lower = scenario.lower()
+        coeff_key = None
+        if "panama" in scenario_lower: coeff_key = "panama"
+        elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
+        elif "savannah" in scenario_lower: coeff_key = "savannah"
+        elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
+        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
+        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
         
-        prompt = f"Analyze the following data and respond with the requested JSON schema.\n\n{context}"
+        risk_table = []
+        # Try to build risk table from retrieved vector context first
+        for item in lead_time_context:
+            try:
+                base = int(float(item.get("base_lead_days", 30)))
+                coeff = 1.0
+                rationale = "No direct route exposure detected based on vector context."
+                
+                if coeff_key == "panama" and item.get("panama_canal_exposure", 0) == 1:
+                    coeff = self.heuristic_coefficients["panama"]
+                    rationale = "Exposed to Panama Canal constraints."
+                elif coeff_key == "suez" and item.get("suez_canal_exposure", 0) == 1:
+                    coeff = self.heuristic_coefficients["suez"]
+                    rationale = "Exposed to Suez Canal / Red Sea rerouting."
+                elif coeff_key == "savannah" and item.get("savannah_port_exposure", 0) == 1:
+                    coeff = self.heuristic_coefficients["savannah"]
+                    rationale = "Exposed to Port of Savannah."
+                elif coeff_key == "west_africa" and item.get("west_africa_port_exposure", 0) == 1:
+                    coeff = self.heuristic_coefficients["west_africa"]
+                    rationale = "Exposed to West Africa ports."
+                elif coeff_key == "hrmz" and item.get("hrmz_exposure", 0) == 1:
+                    coeff = self.heuristic_coefficients["hrmz"]
+                    rationale = "Exposed to Strait of Hormuz (+ fuel surcharge)."
+                
+                if coeff > 1.0:
+                    adj = int(base * coeff)
+                    risk_table.append({
+                        "vendor": item.get("vendor_name", "Unknown"),
+                        "component": item.get("component", "Unknown"),
+                        "category": item.get("category", "Unknown"),
+                        "origin": f"{item.get('origin_port', '')}, {item.get('origin_country', '')}",
+                        "base_lead_days": base,
+                        "disruption_coefficient": coeff,
+                        "adjusted_lead_days": adj,
+                        "risk_level": self._classify_risk(base, adj),
+                        "risk_rationale": rationale
+                    })
+            except (ValueError, TypeError):
+                continue
+        
+        # If no risk items from vector context, fall back to full df
+        if not risk_table:
+            return self._fallback_analysis(scenario, raw_df)
+        
+        risk_table = sorted(risk_table, key=lambda x: x["adjusted_lead_days"], reverse=True)[:15]
+        
+        # --- Step 2: Ask LLM only for the smaller briefing + ripple_effects ---
+        briefing_system_prompt = """You are a Principal Supply Chain Strategist. 
+Generate ONLY the ripple_effects and briefing sections based on the risk table provided.
+Respond strictly with this JSON schema (no markdown fences):
+{
+    "ripple_effects": [{"primary_disruption": str, "affected_route": str, "downstream_impacts": [str]}],
+    "briefing": {
+        "executive_summary": str,
+        "key_findings": [str],
+        "affected_categories": [str],
+        "recommended_actions": [str],
+        "risk_horizon": str
+    }
+}"""
+        context = f"Scenario: {scenario}\n\nRisk Table:\n{json.dumps(risk_table, indent=2)}\n\nDisruption Intelligence:\n{json.dumps([d.get('text','') for d in disruption_context], indent=2)}"
+        prompt = f"Analyze this risk data and generate ripple_effects and briefing JSON:\n\n{context}"
         
         try:
-            response_text = get_llm_response(prompt, self.provider, self.model, self.system_prompt)
+            response_text = get_llm_response(prompt, self.provider, self.model, briefing_system_prompt)
             parsed = self._parse_response(response_text)
-            if "source" not in parsed:
-                parsed["source"] = "llm"
+            parsed["risk_table"] = risk_table
+            parsed["source"] = "rag+llm"
             return parsed
         except Exception as e:
             raise ValueError(f"Failed to generate scenario analysis: {e}")
+
