@@ -13,7 +13,7 @@ from rss_ingest import get_mock_disruptions
 
 # Page config
 st.set_page_config(page_title="PL Sourcing Co-Pilot", page_icon="🚢", layout="wide")
-load_dotenv()
+load_dotenv(override=True)
 
 # Data Loading
 @st.cache_data
@@ -76,25 +76,27 @@ with tab1:
     
     col1, col2 = st.columns([3, 1])
     
+    if "scenario_input" not in st.session_state:
+        st.session_state["scenario_input"] = ""
+        
     with col1:
         question = st.text_area(
             "Enter a disruption scenario:", 
-            placeholder="e.g. If the Panama Canal transit capacity drops by 30%, how does that ripple through our textile components?"
+            placeholder="e.g. If the Panama Canal transit capacity drops by 30%, how does that ripple through our textile components?",
+            key="scenario_input"
         )
     with col2:
         st.markdown("**Quick Toggles:**")
-        hrmz_toggle = st.toggle("⛽ The 'Hormuz' Event Toggle (2026)")
-        panama_btn = st.button("💧 Panama Canal Drought (-50%)")
-        savannah_btn = st.button("⚓ Savannah Labor Strike")
         
-        if hrmz_toggle:
-            question = "With the escalating 2026 geopolitical tensions, what is the impact on fuel surcharges and transit delays if the Strait of Hormuz is blocked?"
-        elif panama_btn:
-            question = "The Panama Canal has implemented a 50% transit reduction. Show me the impact on our East Coast furniture routing."
-        elif savannah_btn:
-            question = "ILWU dockworkers at the Port of Savannah just declared a strike. Which of our components are critically delayed?"
+        def set_scenario(text):
+            st.session_state["scenario_input"] = text
+            
+        st.button("⛽ The 'Hormuz' Event Toggle (2026)", on_click=set_scenario, args=("With the escalating 2026 geopolitical tensions, what is the impact on fuel surcharges and transit delays if the Strait of Hormuz is blocked?",))
+        st.button("💧 Panama Canal Drought (-50%)", on_click=set_scenario, args=("The Panama Canal has implemented a 50% transit reduction. Show me the impact on our East Coast furniture routing.",))
+        st.button("⚓ Savannah Labor Strike", on_click=set_scenario, args=("ILWU dockworkers at the Port of Savannah just declared a strike. Which of our components are critically delayed?",))
 
     if st.button("Analyze Scenario", type="primary", use_container_width=True):
+        # We read from the text_area's value (which is stored in 'scenario_input' or local 'question')
         if not question:
             st.warning("Please enter a scenario.")
         else:

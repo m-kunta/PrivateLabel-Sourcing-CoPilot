@@ -13,7 +13,7 @@ def get_llm_response(prompt: str, provider: str, model: str, system_prompt: Opti
         messages = [{"role": "user", "content": prompt}]
         response = client.messages.create(
             model=model,
-            max_tokens=2000,
+            max_tokens=8192,
             system=system_prompt if system_prompt else anthropic.NOT_GIVEN,
             messages=messages
         )
@@ -31,7 +31,7 @@ def get_llm_response(prompt: str, provider: str, model: str, system_prompt: Opti
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=2000
+            max_tokens=8192
         )
         return response.choices[0].message.content
         
@@ -41,7 +41,10 @@ def get_llm_response(prompt: str, provider: str, model: str, system_prompt: Opti
         from google.genai import types
         client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
         
-        config_kwargs = {"max_output_tokens": 2000}
+        config_kwargs = {
+            "max_output_tokens": 8192,
+            "response_mime_type": "application/json"
+        }
         if system_prompt:
             config_kwargs["system_instruction"] = system_prompt
             
@@ -66,7 +69,7 @@ def get_llm_response(prompt: str, provider: str, model: str, system_prompt: Opti
         response = client.chat.completions.create(
             model=model,
             messages=messages,
-            max_tokens=2000
+            max_tokens=8192
         )
         return response.choices[0].message.content
         
