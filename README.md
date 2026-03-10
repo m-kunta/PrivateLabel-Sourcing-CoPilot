@@ -2,6 +2,15 @@
 
 **A Private Label Supply Chain Intelligence Platform**
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io)
+[![Pinecone](https://img.shields.io/badge/Pinecone-Vector%20DB-00B388?logo=pinecone&logoColor=white)](https://pinecone.io)
+[![LLM: Multi-Provider](https://img.shields.io/badge/LLM-Claude%20%7C%20GPT--4%20%7C%20Gemini%20%7C%20Groq-8A2BE2)](https://github.com/m-kunta/PrivateLabel-Sourcing-CoPilot)
+[![RAG Powered](https://img.shields.io/badge/RAG-Pinecone%20%2B%20MiniLM-0099FF)](https://github.com/m-kunta/PrivateLabel-Sourcing-CoPilot)
+[![Supply Chain AI](https://img.shields.io/badge/domain-Supply%20Chain%20AI-orange)](https://github.com/m-kunta/PrivateLabel-Sourcing-CoPilot)
+[![GitHub](https://img.shields.io/badge/author-m--kunta-181717?logo=github)](https://github.com/m-kunta)
+
 > "If the Panama Canal transit capacity drops by 30%, how does that ripple through our cocoa butter and furniture component lead times?"
 
 **PL Sourcing Co-Pilot** is a RAG-powered AI prototype that answers strategic supply chain "what-if" questions for private label buyers. It combines a Pinecone vector knowledge base (vendor lead times + live disruption news) with an LLM reasoning chain to generate risk-ranked component tables and professional analyst briefings — in seconds.
