@@ -1,0 +1,51 @@
+vendor_id,vendor_name,brand_name,category,component,origin_country,origin_port,destination_port,transport_mode,route_name,base_lead_days,historical_variance_pct,panama_canal_exposure,suez_canal_exposure,savannah_port_exposure,west_africa_port_exposure
+V002,Frederick's Ingredients,Frederick's,Apparel/Textiles,Polyester Yarn,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,77,7.0,0,0,0,0
+V002,Frederick's Ingredients,Frederick's,Packaging,Plastic Resins,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,43,9.7,0,0,0,0
+V001,True Brand Textiles,True,Packaging,Glass Cullet,Oman,Salalah,Savannah,Ocean Freight,Middle East-Atlantic,58,16.8,0,1,1,0
+V001,True Brand Textiles,True,Confectionery/Food,Vanilla Extract,Ivory Coast,Abidjan,New York,Ocean Freight,West Africa-Atlantic,43,24.1,0,0,0,1
+V006,Global Threads Co.,True,Apparel/Textiles,Cotton,Bangladesh,Chittagong,New York,Ocean Freight,Asia-East Coast,84,11.9,1,0,1,0
+V005,EcoSource Pack,EcoSource,Apparel/Textiles,Denim Fabric,UAE,Jebel Ali,New York,Ocean Freight,Middle East-Atlantic,35,16.0,0,1,1,0
+V006,Global Threads Co.,True,Packaging,Glass Cullet,UAE,Jebel Ali,Savannah,Ocean Freight,Middle East-Atlantic,72,9.6,0,1,1,0
+V005,EcoSource Pack,EcoSource,Apparel/Textiles,Spandex Fiber,Vietnam,Ho Chi Minh,Seattle,Ocean Freight,Trans-Pacific,59,17.7,0,0,0,0
+V006,Global Threads Co.,True,Confectionery/Food,Palm Oil,Ghana,Tema,Baltimore,Ocean Freight,West Africa-Atlantic,74,23.7,0,0,0,1
+V002,Frederick's Ingredients,Frederick's,Packaging,Glass Cullet,UAE,Jebel Ali,Savannah,Ocean Freight,Middle East-Atlantic,59,12.6,0,1,1,0
+V004,NatureBest Botanicals,NatureBest,Wood/Furniture,Wood Pulp,China,Shanghai,Seattle,Ocean Freight,Trans-Pacific,55,10.4,0,0,0,0
+V004,NatureBest Botanicals,NatureBest,Packaging,PET Flakes,Indonesia,Jakarta,Seattle,Ocean Freight,Trans-Pacific,55,22.7,0,0,0,0
+V008,Nordic Wood Products,Casa Home,Confectionery/Food,Palm Oil,Bangladesh,Chittagong,New York,Ocean Freight,Asia-East Coast,77,16.7,1,0,1,0
+V007,Equatorial Ag Supply,Frederick's,Wood/Furniture,Hardwood Lumber,Indonesia,Jakarta,Seattle,Ocean Freight,Trans-Pacific,35,20.1,0,0,0,0
+V002,Frederick's Ingredients,Frederick's,Confectionery/Food,Cocoa Powder,Colombia,Cartagena,Miami,Ocean Freight,South America-Atlantic,54,12.6,0,0,1,0
+V008,Nordic Wood Products,Casa Home,Packaging,PET Flakes,UAE,Jebel Ali,Savannah,Ocean Freight,Middle East-Atlantic,73,22.7,0,1,1,0
+V005,EcoSource Pack,EcoSource,Wood/Furniture,Wood Pulp,Colombia,Cartagena,Miami,Ocean Freight,South America-Atlantic,59,5.1,0,0,1,0
+V005,EcoSource Pack,EcoSource,Packaging,Glass Cullet,UAE,Jebel Ali,New York,Ocean Freight,Middle East-Atlantic,83,17.8,0,1,1,0
+V004,NatureBest Botanicals,NatureBest,Confectionery/Food,Palm Oil,China,Shenzhen,Savannah,Ocean Freight,Asia-East Coast,68,11.5,1,0,1,0
+V001,True Brand Textiles,True,Apparel/Textiles,Polyester Yarn,Bangladesh,Chittagong,Savannah,Ocean Freight,Asia-East Coast,45,22.6,1,0,1,0
+V002,Frederick's Ingredients,Frederick's,Apparel/Textiles,Denim Fabric,Indonesia,Jakarta,Los Angeles,Ocean Freight,Trans-Pacific,38,18.2,0,0,0,0
+V003,Casa Home Sourcing,Casa Home,Wood/Furniture,Veneer,Indonesia,Jakarta,Los Angeles,Ocean Freight,Trans-Pacific,75,11.2,0,0,0,0
+V006,Global Threads Co.,True,Personal Care,Aloe Vera,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,34,11.8,0,0,0,0
+V004,NatureBest Botanicals,NatureBest,Packaging,Glass Cullet,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,44,6.3,0,0,0,0
+V001,True Brand Textiles,True,Wood/Furniture,Wood Pulp,Sweden,Gothenburg,New York,Ocean Freight,Europe-East Coast,72,14.7,0,1,0,0
+V003,Casa Home Sourcing,Casa Home,Packaging,Plastic Resins,Vietnam,Ho Chi Minh,Seattle,Ocean Freight,Trans-Pacific,42,6.9,0,0,0,0
+V007,Equatorial Ag Supply,Frederick's,Wood/Furniture,Veneer,Colombia,Cartagena,Miami,Ocean Freight,South America-Atlantic,73,18.1,0,0,1,0
+V002,Frederick's Ingredients,Frederick's,Apparel/Textiles,Denim Fabric,Oman,Salalah,Savannah,Ocean Freight,Middle East-Atlantic,45,8.8,0,1,1,0
+V008,Nordic Wood Products,Casa Home,Confectionery/Food,Vanilla Extract,India,Mumbai,New York,Ocean Freight,Asia-East Coast,45,22.5,1,0,1,0
+V002,Frederick's Ingredients,Frederick's,Personal Care,Shea Butter,Indonesia,Jakarta,Los Angeles,Ocean Freight,Trans-Pacific,35,23.5,0,0,0,0
+V004,NatureBest Botanicals,NatureBest,Confectionery/Food,Vanilla Extract,Ivory Coast,Abidjan,New York,Ocean Freight,West Africa-Atlantic,85,13.0,0,0,0,1
+V001,True Brand Textiles,True,Confectionery/Food,Vanilla Extract,India,Mumbai,New York,Ocean Freight,Asia-East Coast,89,20.7,1,0,1,0
+V008,Nordic Wood Products,Casa Home,Wood/Furniture,Veneer,Italy,Genoa,New York,Ocean Freight,Europe-East Coast,39,8.8,0,1,0,0
+V004,NatureBest Botanicals,NatureBest,Apparel/Textiles,Cotton,Oman,Salalah,Savannah,Ocean Freight,Middle East-Atlantic,33,16.7,0,1,1,0
+V003,Casa Home Sourcing,Casa Home,Apparel/Textiles,Cotton,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,73,22.2,0,0,0,0
+V007,Equatorial Ag Supply,Frederick's,Apparel/Textiles,Spandex Fiber,UAE,Jebel Ali,Savannah,Ocean Freight,Middle East-Atlantic,56,18.1,0,1,1,0
+V006,Global Threads Co.,True,Wood/Furniture,Hardwood Lumber,Italy,Genoa,New York,Ocean Freight,Europe-East Coast,45,10.3,0,1,0,0
+V003,Casa Home Sourcing,Casa Home,Wood/Furniture,Veneer,Brazil,Santos,Miami,Ocean Freight,South America-Atlantic,59,17.4,0,0,1,0
+V002,Frederick's Ingredients,Frederick's,Apparel/Textiles,Spandex Fiber,Oman,Salalah,Savannah,Ocean Freight,Middle East-Atlantic,89,12.0,0,1,1,0
+V002,Frederick's Ingredients,Frederick's,Confectionery/Food,Palm Oil,Ghana,Tema,Baltimore,Ocean Freight,West Africa-Atlantic,83,15.9,0,0,0,1
+V005,EcoSource Pack,EcoSource,Packaging,Recycled Cardboard,Oman,Salalah,Savannah,Ocean Freight,Middle East-Atlantic,90,22.6,0,1,1,0
+V005,EcoSource Pack,EcoSource,Apparel/Textiles,Cotton,UAE,Jebel Ali,New York,Ocean Freight,Middle East-Atlantic,48,17.1,0,1,1,0
+V006,Global Threads Co.,True,Confectionery/Food,Palm Oil,Colombia,Cartagena,Savannah,Ocean Freight,South America-Atlantic,87,23.2,0,0,1,0
+V001,True Brand Textiles,True,Apparel/Textiles,Denim Fabric,Bangladesh,Chittagong,Savannah,Ocean Freight,Asia-East Coast,51,20.4,1,0,1,0
+V005,EcoSource Pack,EcoSource,Confectionery/Food,Vanilla Extract,Colombia,Cartagena,Miami,Ocean Freight,South America-Atlantic,37,6.5,0,0,1,0
+V003,Casa Home Sourcing,Casa Home,Packaging,Recycled Cardboard,China,Shenzhen,Savannah,Ocean Freight,Asia-East Coast,57,7.5,1,0,1,0
+V005,EcoSource Pack,EcoSource,Wood/Furniture,Wood Pulp,Brazil,Santos,Miami,Ocean Freight,South America-Atlantic,72,7.1,0,0,1,0
+V007,Equatorial Ag Supply,Frederick's,Packaging,Glass Cullet,China,Shanghai,Los Angeles,Ocean Freight,Trans-Pacific,86,13.2,0,0,0,0
+V003,Casa Home Sourcing,Casa Home,Wood/Furniture,Veneer,Italy,Genoa,Baltimore,Ocean Freight,Europe-East Coast,47,8.2,0,1,0,0
+V002,Frederick's Ingredients,Frederick's,Personal Care,Shea Butter,Brazil,Santos,Miami,Ocean Freight,South America-Atlantic,82,23.4,0,0,1,0

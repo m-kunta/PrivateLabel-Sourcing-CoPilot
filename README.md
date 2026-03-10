@@ -372,4 +372,7 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 
 ---
 
-*Part of the Mohith Kunta supply chain AI portfolio — see also `dc_outbound_smoothing` (LevelSet) and `phantom_inventory` (Phantom Inventory Hunter).*
+*Part of the **Mohith Kunta** supply chain AI portfolio — see also `dc_outbound_smoothing` (LevelSet) and `phantom_inventory` (Phantom Inventory Hunter).*
+
+**Author:** Mohith Kunta  
+**GitHub:** [https://github.com/m-kunta](https://github.com/m-kunta)
