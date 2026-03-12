@@ -122,7 +122,7 @@ with tab1:
         with sub_col1:
             st.subheader("📑 Strategic Analyst Briefing")
         with sub_col2:
-            if res.get("source") == "llm":
+            if res.get("source") == "rag+llm":
                 st.info("Source: **Vector DB (RAG) + LLM**")
             else:
                 st.warning("Source: **Heuristic Fallback + LLM**")

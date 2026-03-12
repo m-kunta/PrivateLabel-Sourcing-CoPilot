@@ -91,7 +91,8 @@ def generate_synthetic_data(num_records=50, seed=42):
             "panama_canal_exposure": route["panama"],
             "suez_canal_exposure": route["suez"],
             "savannah_port_exposure": route["savannah"],
-            "west_africa_port_exposure": route["west_africa"]
+            "west_africa_port_exposure": route["west_africa"],
+            "hrmz_exposure": route["hrmz"]
         })
 
     df = pd.DataFrame(records)
