@@ -9,7 +9,7 @@ from vector_store import VectorStore
 from llm_providers import get_llm_response
 
 class StrategicAnalystChain:
-    def __init__(self, vector_store: Optional[VectorStore], provider: str = "Anthropic", model: str = "claude-3-5-haiku-latest"):
+    def __init__(self, vector_store: Optional[VectorStore], provider: str = "Anthropic", model: str = "claude-3-7-sonnet-20250219"):
         self.vs = vector_store
         self.provider = provider
         self.model = model

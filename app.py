@@ -40,7 +40,7 @@ with st.sidebar:
     provider = st.selectbox("Provider", ["Anthropic", "OpenAI", "Gemini", "Groq", "Ollama"])
     
     # Defaults
-    default_model = "claude-3-5-haiku-latest"
+    default_model = "claude-3-7-sonnet-20250219"
     if provider == "OpenAI": default_model = "gpt-4o-mini"
     elif provider == "Gemini": default_model = "gemini-2.5-flash"
     elif provider == "Groq": default_model = "llama-3.3-70b-versatile"
@@ -68,7 +68,99 @@ with st.sidebar:
 
 # Main UI Tabs
 st.title("🚢 Private Label Sourcing Co-Pilot")
-tab1, tab2, tab3 = st.tabs(["📊 Scenario Analyzer", "📈 Risk Dashboard", "🗄️ Data Hub"])
+tab0, tab1, tab2, tab3 = st.tabs(["❓ How to Use", "📊 Scenario Analyzer", "📈 Risk Dashboard", "🗄️ Data Hub"])
+
+with tab0:
+    st.markdown("## The Problem")
+    st.markdown(
+        """
+        Private label buying teams at large retailers source raw materials directly from
+        global suppliers under their own brand labels — True brand cotton, Frederick's cocoa
+        butter, Casa Home wood pulp. When a disruption hits (a port strike, a canal drought,
+        a geopolitical flashpoint), these teams have **no rapid way to answer the critical
+        "what-if" question**:
+
+        > *"If Savannah strikes next week, which of our 40+ sourced components are at risk,
+        > and by how many days?"*
+
+        The result: out-of-stock penalties estimated at **4–8% of annual category revenue**,
+        emergency air freight at **6–10× the ocean rate**, and private label brand credibility
+        damage that drives shoppers to national brands.
+        """
+    )
+
+    st.divider()
+    st.markdown("## How This Tool Solves It")
+
+    col_a, col_b, col_c = st.columns(3)
+    with col_a:
+        st.markdown("#### 1️⃣ Institutional Memory")
+        st.markdown(
+            "Vendor lead times, shipping routes, and route-vulnerability flags are stored "
+            "in a **Pinecone vector database** — so the system understands *why* a Panama "
+            "Canal drought affects Asia-East Coast apparel but not West Africa cocoa."
+        )
+    with col_b:
+        st.markdown("#### 2️⃣ LLM Reasoning")
+        st.markdown(
+            "An LLM acting as a **Principal Supply Chain Strategist** applies heuristic "
+            "disruption coefficients, traces second-order ripple effects, and "
+            "risk-classifies every affected component 🔴 Red / 🟡 Yellow / 🟢 Green."
+        )
+    with col_c:
+        st.markdown("#### 3️⃣ Decision-Ready Briefing")
+        st.markdown(
+            "The output is an **executive summary, key findings, recommended actions, "
+            "and a risk horizon** — formatted for a VP of Merchandising and ready to "
+            "share with your buying team in seconds."
+        )
+
+    st.divider()
+    st.markdown("## Steps to Use")
+
+    with st.expander("🔧 First-Time Setup (run once)", expanded=False):
+        st.markdown(
+            """
+            1. **Generate lead time data** — run `python data_gen.py` in your terminal to create `data/vendor_lead_times.csv`.
+            2. **Configure your `.env`** — set `LLM_PROVIDER` and the matching API key (Anthropic, OpenAI, Gemini, Groq, or Ollama). Optionally add `PINECONE_API_KEY` for full RAG mode.
+            3. **Ingest into Pinecone** *(optional — skip for fallback mode)*:
+               - Go to the **🗄️ Data Hub** tab.
+               - Click **Initialize Pinecone Index**, then **Ingest Vendor Lead Times**, then **Ingest Disruptions**.
+            """
+        )
+
+    with st.expander("📊 Running a Scenario (every day use)", expanded=True):
+        st.markdown(
+            """
+            1. Go to the **📊 Scenario Analyzer** tab.
+            2. Type a "what-if" disruption question in the text box — or use one of the **Quick Toggles** on the right.
+            3. Click **Analyze Scenario**.
+            4. Review the **Strategic Analyst Briefing** (executive summary, key findings, recommended actions).
+            5. Scroll down to the **Risk Impact Table** — components are colour-coded 🔴 Red / 🟡 Yellow / 🟢 Green and sortable.
+            6. Review **Ripple Effects** to see second-order downstream impacts.
+            7. Use the **Download CSV** button to export the risk table for your buying team.
+            """
+        )
+
+    with st.expander("💡 Example Scenarios to Try", expanded=False):
+        st.code(
+            '"If the Panama Canal transit capacity drops by 30%, how does that ripple through our furniture component lead times?"\n'
+            '"A port strike is declared at Savannah. Which of our private label components are critically delayed?"\n'
+            '"West Africa cocoa yield has dropped 25% due to El Niño — how does this affect cocoa butter supply?"\n'
+            '"If Red Sea shipping is suspended, which routes are forced around Cape of Good Hope and by how many days?"',
+            language=""
+        )
+        st.info(
+            "💡 Use the **🔴 Hormuz Toggle** button in the Scenario Analyzer for an instant 2026 "
+            "Strait of Hormuz geopolitical scenario — no typing required."
+        )
+
+    st.divider()
+    st.caption(
+        "Running in **Heuristic Fallback Mode** (no Pinecone key needed) — scenario results are structurally "
+        "identical but use `data/vendor_lead_times.csv` directly instead of semantic vector retrieval. "
+        "Check the sidebar for system status."
+    )
 
 with tab1:
     st.markdown("### What-If Analysis Engine")
