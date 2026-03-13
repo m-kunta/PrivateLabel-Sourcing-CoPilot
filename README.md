@@ -10,6 +10,62 @@
 
 ---
 
+## How to Use
+
+### The Problem in One Sentence
+
+Private label buying teams have **no rapid way to answer "what-if" disruption questions** — _"If Savannah strikes next week, which of our 40+ sourced components are at risk, and by how many days?"_ — before shelf gaps materialise and emergency air freight bills arrive.
+
+### How This Solution Demonstrates the Answer
+
+The Co-Pilot closes that gap in three steps:
+
+1. **Stores institutional knowledge** — vendor lead times, shipping routes, and route-vulnerability flags — in a Pinecone vector database so the system understands _why_ a Panama Canal drought affects Asia-East Coast apparel but not West Africa cocoa.
+2. **Reasons over a disruption scenario** — an LLM acting as a Principal Supply Chain Strategist applies heuristic disruption coefficients, traces second-order ripple effects, and risk-classifies every affected component (🔴 Red / 🟡 Yellow / 🟢 Green).
+3. **Delivers a decision-ready briefing** — executive summary, key findings, recommended actions, and a risk horizon — in seconds, formatted for a VP of Merchandising.
+
+### Quick-Start Steps
+
+> **No Pinecone account?** Skip steps 3–5 — the app runs in **fallback mode** using `data/vendor_lead_times.csv` directly. Results are structurally identical.
+
+**1. Install**
+```bash
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+**2. Configure**
+```bash
+cp .env.example .env
+# Set LLM_PROVIDER and the matching API key.
+# Optionally set PINECONE_API_KEY for full RAG mode.
+```
+
+**3. Generate lead time data**
+```bash
+python data_gen.py          # creates data/vendor_lead_times.csv
+```
+
+**4. Launch the dashboard**
+```bash
+streamlit run app.py        # opens at http://localhost:8501
+```
+
+**5. (Full RAG mode only) Ingest data**
+
+In the **Data Hub** tab: click **Initialize Pinecone Index → Ingest Lead Times → Ingest Disruptions**.
+
+**6. Run a scenario**
+
+Go to the **Scenario Analyzer** tab and try one of these:
+- *"Panama Canal transit drops 30% — which furniture components are at risk?"*
+- *"Savannah port strike declared — which private label components are affected?"*
+- Use the **🔴 Hormuz Toggle** to model the 2026 Strait of Hormuz geopolitical scenario instantly.
+
+The output is a ranked risk table + an analyst briefing you can share directly with your buying team.
+
+---
+
 ## The Problem
 
 Private label teams at large retailers (Target, Costco, Walmart, Kroger) source raw materials directly from global suppliers under their own brand labels — True brand cotton, Frederick's cocoa butter, Casa Home wood pulp. These buyers face a structurally harder sourcing problem than branded goods buyers:
@@ -288,7 +344,7 @@ GROQ_API_KEY=your_groq_key_here
 
 | Provider | Python Package | Cost | Default Model |
 |---|---|---|---|
-| **Anthropic** | `anthropic` | Paid | `claude-3-5-haiku-latest` |
+| **Anthropic** | `anthropic` | Paid | `claude-3-7-sonnet-20250219` |
 | **OpenAI** | `openai` | Paid | `gpt-4o-mini` |
 | **Gemini** | `google-genai` | Free Tier | `gemini-2.5-flash` |
 | **Groq** | `groq` | Free API | `llama-3.3-70b-versatile` |
