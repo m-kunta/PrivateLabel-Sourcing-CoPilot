@@ -11,6 +11,22 @@ from vector_store import VectorStore
 from scenario_engine import StrategicAnalystChain
 from rss_ingest import get_mock_disruptions
 
+MODEL_DEFAULTS = {
+    "Anthropic": "claude-sonnet-4-20250514",
+    "OpenAI": "gpt-4o-mini",
+    "Gemini": "gemini-2.5-flash",
+    "Groq": "llama-3.3-70b-versatile",
+    "Ollama": "llama3.2",
+}
+
+
+def normalize_provider(value: str) -> str:
+    for provider_name in MODEL_DEFAULTS:
+        if provider_name.lower() == (value or "").strip().lower():
+            return provider_name
+    return "Anthropic"
+
+
 # Page config
 st.set_page_config(page_title="PL Sourcing Co-Pilot", page_icon="🚢", layout="wide")
 load_dotenv(override=True)
@@ -29,6 +45,13 @@ if "vs" not in st.session_state:
     st.session_state["vs"] = VectorStore()
 if "last_analysis" not in st.session_state:
     st.session_state["last_analysis"] = None
+if "provider" not in st.session_state:
+    st.session_state["provider"] = normalize_provider(os.getenv("LLM_PROVIDER", "Anthropic"))
+if "model" not in st.session_state:
+    st.session_state["model"] = os.getenv(
+        "LLM_MODEL",
+        MODEL_DEFAULTS[st.session_state["provider"]]
+    )
 
 df = load_data()
 
@@ -37,16 +60,19 @@ with st.sidebar:
     st.header("⚙️ Configuration")
     
     st.subheader("LLM Engine")
-    provider = st.selectbox("Provider", ["Anthropic", "OpenAI", "Gemini", "Groq", "Ollama"])
-    
-    # Defaults
-    default_model = "claude-3-7-sonnet-20250219"
-    if provider == "OpenAI": default_model = "gpt-4o-mini"
-    elif provider == "Gemini": default_model = "gemini-2.5-flash"
-    elif provider == "Groq": default_model = "llama-3.3-70b-versatile"
-    elif provider == "Ollama": default_model = "llama3.2"
-        
-    model = st.text_input("Model Name", default_model)
+    provider_options = list(MODEL_DEFAULTS)
+    provider = st.selectbox(
+        "Provider",
+        provider_options,
+        index=provider_options.index(st.session_state["provider"])
+    )
+    provider_changed = provider != st.session_state["provider"]
+    st.session_state["provider"] = provider
+
+    if provider_changed:
+        st.session_state["model"] = MODEL_DEFAULTS[provider]
+
+    model = st.text_input("Model Name", key="model")
     st.session_state["provider"] = provider
     st.session_state["model"] = model
     

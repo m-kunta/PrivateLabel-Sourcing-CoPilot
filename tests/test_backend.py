@@ -4,7 +4,7 @@
 import pytest
 import pandas as pd
 from scenario_engine import StrategicAnalystChain
-import json
+import scenario_engine
 
 
 @pytest.fixture
@@ -57,9 +57,8 @@ def test_disruption_coefficient_panama(mock_df):
     # We patch the parsing to return a dummy to avoid LLM call for this test
     chain._parse_response = lambda x: {"briefing": {}, "ripple_effects": []}
 
-    import llm_providers
-    original_get_llm_response = llm_providers.get_llm_response
-    llm_providers.get_llm_response = lambda p, pr, m, s: "{}"  # Mock
+    original_get_llm_response = scenario_engine.llm_providers.get_llm_response
+    scenario_engine.llm_providers.get_llm_response = lambda p, pr, m, s: "{}"  # Mock
 
     try:
         res = chain._fallback_analysis("panama canal is blocked", mock_df)
@@ -72,7 +71,7 @@ def test_disruption_coefficient_panama(mock_df):
         assert rt[0]["adjusted_lead_days"] == 40
         assert rt[0]["risk_level"] == "Yellow"
     finally:
-        llm_providers.get_llm_response = original_get_llm_response
+        scenario_engine.llm_providers.get_llm_response = original_get_llm_response
 
 
 def test_json_schema_compliance():
@@ -99,13 +98,12 @@ Have a good day!
 
 def test_fallback_schema_fallback(mock_df):
     chain = StrategicAnalystChain(vector_store=None)
-    import llm_providers
-    original_get_llm_response = llm_providers.get_llm_response
+    original_get_llm_response = scenario_engine.llm_providers.get_llm_response
 
     def bad_llm(*args, **kwargs):
         raise ValueError("API Error")
 
-    llm_providers.get_llm_response = bad_llm
+    scenario_engine.llm_providers.get_llm_response = bad_llm
 
     try:
         res = chain._fallback_analysis("panama", mock_df)
@@ -114,7 +112,7 @@ def test_fallback_schema_fallback(mock_df):
         assert "executive_summary" in res["briefing"]
         assert "System operated in degraded fallback mode" in res["briefing"]["executive_summary"]
     finally:
-        llm_providers.get_llm_response = original_get_llm_response
+        scenario_engine.llm_providers.get_llm_response = original_get_llm_response
 
 
 # ---------------------------------------------------------------------------
@@ -123,8 +121,7 @@ def test_fallback_schema_fallback(mock_df):
 
 def _mock_llm(monkeypatch):
     """Patch llm_providers.get_llm_response with a no-op returning minimal JSON."""
-    import llm_providers
-    monkeypatch.setattr(llm_providers, "get_llm_response", lambda *a, **kw: "{}")
+    monkeypatch.setattr(scenario_engine.llm_providers, "get_llm_response", lambda *a, **kw: "{}")
 
 
 # ---------------------------------------------------------------------------

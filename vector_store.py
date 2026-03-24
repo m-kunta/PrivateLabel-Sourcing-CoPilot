@@ -2,7 +2,6 @@
 # GitHub: https://github.com/m-kunta
 
 import os
-import json
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any, Optional
@@ -74,7 +73,7 @@ class VectorStore:
         df = pd.read_csv(csv_path)
         vectors = []
         
-        for _, row in df.iterrows():
+        for idx, row in df.iterrows():
             # Create a rich text representation for semantic search
             text = (
                 f"Vendor: {row['vendor_name']} ({row['brand_name']}). "
@@ -105,7 +104,10 @@ class VectorStore:
             # Unique ID
             vid = str(row['vendor_id']).replace(" ", "")
             comp = str(row['component']).replace(" ", "_").replace("/", "_")
-            v_id = f"lt_{vid}_{comp}"
+            route = str(row['route_name']).replace(" ", "_").replace("/", "_")
+            origin = str(row['origin_port']).replace(" ", "_").replace("/", "_")
+            destination = str(row['destination_port']).replace(" ", "_").replace("/", "_")
+            v_id = f"lt_{vid}_{comp}_{route}_{origin}_{destination}_{idx}"
             
             vectors.append({
                 "id": v_id,

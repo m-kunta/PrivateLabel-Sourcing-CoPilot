@@ -6,10 +6,10 @@ import re
 import pandas as pd
 from typing import Dict, Any, List, Optional
 from vector_store import VectorStore
-from llm_providers import get_llm_response
+import llm_providers
 
 class StrategicAnalystChain:
-    def __init__(self, vector_store: Optional[VectorStore], provider: str = "Anthropic", model: str = "claude-3-7-sonnet-20250219"):
+    def __init__(self, vector_store: Optional[VectorStore], provider: str = "Anthropic", model: str = "claude-sonnet-4-20250514"):
         self.vs = vector_store
         self.provider = provider
         self.model = model
@@ -153,7 +153,7 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         prompt = f"Generate the ripple_effects and briefing based on this contextual risk table:\n\n{context}"
         
         try:
-            response_text = get_llm_response(prompt, self.provider, self.model, self.system_prompt)
+            response_text = llm_providers.get_llm_response(prompt, self.provider, self.model, self.system_prompt)
             parsed = self._parse_response(response_text)
             parsed["risk_table"] = risk_table
             parsed["source"] = "fallback"
@@ -254,11 +254,10 @@ Respond strictly with this JSON schema (no markdown fences):
         prompt = f"Analyze this risk data and generate ripple_effects and briefing JSON:\n\n{context}"
         
         try:
-            response_text = get_llm_response(prompt, self.provider, self.model, briefing_system_prompt)
+            response_text = llm_providers.get_llm_response(prompt, self.provider, self.model, briefing_system_prompt)
             parsed = self._parse_response(response_text)
             parsed["risk_table"] = risk_table
             parsed["source"] = "rag+llm"
             return parsed
         except Exception as e:
             raise ValueError(f"Failed to generate scenario analysis: {e}")
-
