@@ -405,3 +405,108 @@ class TestRiskTableOrdering:
         assert adj_days == sorted(adj_days, reverse=True), (
             f"risk_table should be sorted descending by adjusted_lead_days; got {adj_days}"
         )
+
+
+# ---------------------------------------------------------------------------
+# TestRiskThresholdBoundaryPin
+# Pins the exact boundary between Yellow and Red at ratio = 1.35, and between
+# Green and Yellow at 1.15. Both thresholds use strict '>' so boundary values
+# fall into the lower bucket.
+# ---------------------------------------------------------------------------
+
+class TestRiskThresholdBoundaryPin:
+
+    def test_exactly_135_is_yellow_not_red(self):
+        """ratio == 1.35 exactly → Yellow (condition is strictly > 1.35)."""
+        chain = StrategicAnalystChain(vector_store=None)
+        assert chain._classify_risk(100, 135) == "Yellow"
+
+    def test_one_above_135_is_red(self):
+        """ratio 1.36 → Red."""
+        chain = StrategicAnalystChain(vector_store=None)
+        assert chain._classify_risk(100, 136) == "Red"
+
+    def test_exactly_115_is_green_not_yellow(self):
+        """ratio == 1.15 exactly → Green (condition is strictly > 1.15)."""
+        chain = StrategicAnalystChain(vector_store=None)
+        assert chain._classify_risk(100, 115) == "Green"
+
+    def test_one_above_115_is_yellow(self):
+        """ratio 1.16 → Yellow."""
+        chain = StrategicAnalystChain(vector_store=None)
+        assert chain._classify_risk(100, 116) == "Yellow"
+
+
+# ---------------------------------------------------------------------------
+# TestMiddleEastKeywordRouting
+# Israel, Egypt, and 'middle east' keywords now route to hrmz in BOTH
+# _fallback_analysis and analyze_scenario (RAG path). Behavior is consistent.
+# ---------------------------------------------------------------------------
+
+class TestMiddleEastKeywordRouting:
+
+    def test_israel_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'israel' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
+        _mock_llm(monkeypatch)
+        chain = StrategicAnalystChain(vector_store=None)
+        df = pd.DataFrame([{
+            "vendor_name": "Gulf Vendor",
+            "component": "Petroleum Wax",
+            "category": "Chemicals",
+            "origin_port": "Dubai",
+            "origin_country": "UAE",
+            "base_lead_days": 35,
+            "panama_canal_exposure": 0,
+            "suez_canal_exposure": 0,
+            "savannah_port_exposure": 0,
+            "west_africa_port_exposure": 0,
+            "hrmz_exposure": 1,
+        }])
+        res = chain._fallback_analysis("israel conflict escalation", df)
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"
+
+    def test_egypt_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'egypt' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
+        _mock_llm(monkeypatch)
+        chain = StrategicAnalystChain(vector_store=None)
+        df = pd.DataFrame([{
+            "vendor_name": "Suez Vendor",
+            "component": "Cotton",
+            "category": "Textiles",
+            "origin_port": "Alexandria",
+            "origin_country": "Egypt",
+            "base_lead_days": 45,
+            "panama_canal_exposure": 0,
+            "suez_canal_exposure": 0,
+            "savannah_port_exposure": 0,
+            "west_africa_port_exposure": 0,
+            "hrmz_exposure": 1,
+        }])
+        res = chain._fallback_analysis("egypt port tensions", df)
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"
+
+    def test_middle_east_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'middle east' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
+        _mock_llm(monkeypatch)
+        chain = StrategicAnalystChain(vector_store=None)
+        df = pd.DataFrame([{
+            "vendor_name": "Gulf Vendor",
+            "component": "Shea Butter",
+            "category": "Health & Beauty",
+            "origin_port": "Muscat",
+            "origin_country": "Oman",
+            "base_lead_days": 28,
+            "panama_canal_exposure": 0,
+            "suez_canal_exposure": 0,
+            "savannah_port_exposure": 0,
+            "west_africa_port_exposure": 0,
+            "hrmz_exposure": 1,
+        }])
+        res = chain._fallback_analysis("middle east tensions escalate", df)
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"
