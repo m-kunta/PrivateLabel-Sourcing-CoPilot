@@ -438,17 +438,15 @@ class TestRiskThresholdBoundaryPin:
 
 
 # ---------------------------------------------------------------------------
-# TestMiddleEastKeywordRoutingGap
-# Documents that 'israel', 'egypt', and 'middle east' keywords are NOT
-# handled by _fallback_analysis — they route to hrmz ONLY via analyze_scenario
-# (the Pinecone RAG path). Tests assert the known gap so future devs don't
-# accidentally rely on fallback behaviour for these terms.
+# TestMiddleEastKeywordRouting
+# Israel, Egypt, and 'middle east' keywords now route to hrmz in BOTH
+# _fallback_analysis and analyze_scenario (RAG path). Behavior is consistent.
 # ---------------------------------------------------------------------------
 
-class TestMiddleEastKeywordRoutingGap:
+class TestMiddleEastKeywordRouting:
 
-    def test_israel_keyword_not_handled_by_fallback(self, monkeypatch):
-        """'israel' is NOT a keyword in _fallback_analysis → empty risk_table."""
+    def test_israel_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'israel' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
         _mock_llm(monkeypatch)
         chain = StrategicAnalystChain(vector_store=None)
         df = pd.DataFrame([{
@@ -465,12 +463,12 @@ class TestMiddleEastKeywordRoutingGap:
             "hrmz_exposure": 1,
         }])
         res = chain._fallback_analysis("israel conflict escalation", df)
-        assert res["risk_table"] == [], (
-            "'israel' is not in _fallback_analysis keyword map; risk_table should be empty"
-        )
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"
 
-    def test_egypt_keyword_not_handled_by_fallback(self, monkeypatch):
-        """'egypt' is NOT a keyword in _fallback_analysis → empty risk_table."""
+    def test_egypt_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'egypt' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
         _mock_llm(monkeypatch)
         chain = StrategicAnalystChain(vector_store=None)
         df = pd.DataFrame([{
@@ -487,12 +485,12 @@ class TestMiddleEastKeywordRoutingGap:
             "hrmz_exposure": 1,
         }])
         res = chain._fallback_analysis("egypt port tensions", df)
-        assert res["risk_table"] == [], (
-            "'egypt' is not in _fallback_analysis keyword map; risk_table should be empty"
-        )
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"
 
-    def test_middle_east_keyword_not_handled_by_fallback(self, monkeypatch):
-        """'middle east' is NOT a keyword in _fallback_analysis → empty risk_table."""
+    def test_middle_east_keyword_routes_to_hrmz_in_fallback(self, monkeypatch):
+        """'middle east' now routes to hrmz coefficient 1.45 in _fallback_analysis."""
         _mock_llm(monkeypatch)
         chain = StrategicAnalystChain(vector_store=None)
         df = pd.DataFrame([{
@@ -509,6 +507,6 @@ class TestMiddleEastKeywordRoutingGap:
             "hrmz_exposure": 1,
         }])
         res = chain._fallback_analysis("middle east tensions escalate", df)
-        assert res["risk_table"] == [], (
-            "'middle east' is not in _fallback_analysis keyword map; risk_table should be empty"
-        )
+        assert len(res["risk_table"]) == 1
+        assert res["risk_table"][0]["disruption_coefficient"] == 1.45
+        assert res["risk_table"][0]["risk_level"] == "Red"

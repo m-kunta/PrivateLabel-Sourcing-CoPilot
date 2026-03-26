@@ -420,10 +420,9 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 - [x] `scenario_engine.py` — RAG + LLM reasoning chain (two-step: Python risk table + LLM briefing)
 - [x] `app.py` — Streamlit dashboard (3 tabs)
 - [x] The "Hormuz" Event Toggle (2026 Geopolitical scenario modeling)
-- [x] Unit + regression tests (`tests/test_backend.py`)
+- [x] Unit + regression tests (`tests/test_backend.py`, `tests/test_vector_store.py`, `tests/test_scenario_engine_rag.py`, `tests/test_support_modules.py`) — 34 tests passing
 - [ ] News API integration (upgrade from RSS scraping)
 - [ ] Real-time Pinecone update pipeline
-- [ ] `test_vector_store_ingest_roundtrip()` — Pinecone ingest/query integration test
 
 ---
 

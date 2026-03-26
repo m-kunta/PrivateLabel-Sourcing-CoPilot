@@ -100,7 +100,8 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
         elif "savannah" in scenario_lower: coeff_key = "savannah"
         elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
-        elif "hormuz" in scenario_lower: coeff_key = "hrmz"
+        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
+        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
         
         risk_table = []
         for _, row in raw_df.iterrows():
