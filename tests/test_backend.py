@@ -510,3 +510,74 @@ class TestMiddleEastKeywordRouting:
         assert len(res["risk_table"]) == 1
         assert res["risk_table"][0]["disruption_coefficient"] == 1.45
         assert res["risk_table"][0]["risk_level"] == "Red"
+
+# ---------------------------------------------------------------------------
+# TestVectorStoreRoundtrip
+# Verifies the P1 requirement: ingest -> query returns matching record.
+# Mocks the external Pinecone API to ensure unit test speed and reliability.
+# ---------------------------------------------------------------------------
+
+class TestVectorStoreRoundtrip:
+
+    def test_vector_store_ingest_roundtrip(self, monkeypatch):
+        from unittest.mock import MagicMock
+        from vector_store import VectorStore
+        
+        # 1. Setup mock Pinecone Index
+        mock_index = MagicMock()
+        
+        # 2. Initialize VectorStore with a dummy key
+        vs = VectorStore(api_key="dummy")
+        vs.index_name = "test-index"
+        vs.pc = MagicMock()
+        vs.index = mock_index
+        vs._initialized = True
+        
+        # Fake index exists
+        mock_idx_obj = MagicMock()
+        mock_idx_obj.name = "test-index"
+        vs.pc.list_indexes.return_value = [mock_idx_obj]
+        
+        assert vs.is_ready() is True, "Mock VectorStore should be ready"
+        
+        # 3. Ingest mock disruption
+        disruption = [{
+            "event_type": "Test Event",
+            "location": "Test Port",
+            "severity": "High",
+            "affected_routes": ["Route A"],
+            "date": "2026-04-26",
+            "source": "Test Source",
+            "headline": "Test Headline",
+            "text": "Test body text"
+        }]
+        
+        # Mock embed to avoid downloading sentence-transformers
+        monkeypatch.setattr(vs, "embed", lambda text: [0.1, 0.2, 0.3])
+        
+        vs.ingest_disruptions(disruption)
+        
+        # Verify upsert was called correctly
+        mock_index.upsert.assert_called_once()
+        upsert_kwargs = mock_index.upsert.call_args.kwargs
+        assert upsert_kwargs["namespace"] == "disruptions"
+        vectors = upsert_kwargs["vectors"]
+        assert len(vectors) == 1
+        assert vectors[0]["metadata"]["headline"] == "Test Headline"
+        
+        # 4. Mock query response
+        mock_query_response = MagicMock()
+        mock_match = MagicMock()
+        mock_match.metadata = vectors[0]["metadata"]
+        mock_query_response.matches = [mock_match]
+        mock_index.query.return_value = mock_query_response
+        
+        # 5. Query and verify it returns the ingested record
+        results = vs.query("test query", namespace="disruptions")
+        
+        mock_index.query.assert_called_once()
+        query_kwargs = mock_index.query.call_args.kwargs
+        assert query_kwargs["namespace"] == "disruptions"
+        assert len(results) == 1
+        assert results[0]["headline"] == "Test Headline"
+        assert results[0]["event_type"] == "Test Event"
