@@ -274,7 +274,7 @@ The LLM is explicitly prompted to enumerate second-order effects when generating
 | `app.py` | Streamlit dashboard — 3 tabs, sidebar, session state |
 | `vector_store.py` | `VectorStore` class — Pinecone v3 init, ingest, query |
 | `scenario_engine.py` | `StrategicAnalystChain` — RAG orchestration + LLM reasoning |
-| `rss_ingest.py` | RSS feed parser + 10 curated mock disruption events |
+| `rss_ingest.py` | Live RSS feed parser (Supply Chain Dive, Logistics Mgmt) + curated mock fallback |
 | `llm_providers.py` | Multi-provider LLM factory (Anthropic/OpenAI/Gemini/Groq/Ollama) |
 | `data_gen.py` | Generates `data/vendor_lead_times.csv` (50 synthetic rows) |
 | `requirements.txt` | Python dependencies |
@@ -415,7 +415,7 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 - [x] Problem statement and documentation
 - [x] `data_gen.py` — synthetic lead time CSV
 - [x] `vector_store.py` — Pinecone v3 integration
-- [x] `rss_ingest.py` — 6 curated mock disruption events (RSS parsing planned)
+- [x] `rss_ingest.py` — Live RSS feed parsing via LLM extraction (with mock disruption fallback)
 - [x] `llm_providers.py` — multi-provider LLM factory
 - [x] `scenario_engine.py` — RAG + LLM reasoning chain (two-step: Python risk table + LLM briefing)
 - [x] `app.py` — Streamlit dashboard (3 tabs)
@@ -446,6 +446,12 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 ---
 
 ## Changelog
+
+### v0.3.0 — 2026-04-26 (Live RSS & Testing)
+
+#### Features
+- **Live RSS Ingestion** — Upgraded `rss_ingest.py` to hit real supply chain feeds (Supply Chain Dive, Logistics Management) and parse headlines into structured JSON using LLM schema extraction.
+- **Vector Store Roundtrip Tests** — Added comprehensive unit tests for `VectorStore` using `unittest.mock` to validate Pinecone namespace mapping and ingestion roundtripping without making external network calls.
 
 ### v0.2.0 — 2026-03-09 (Live Testing Fixes)
 

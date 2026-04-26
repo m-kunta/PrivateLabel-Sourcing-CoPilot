@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from vector_store import VectorStore
 from scenario_engine import StrategicAnalystChain
-from rss_ingest import get_mock_disruptions
+from rss_ingest import get_live_disruptions
 
 MODEL_DEFAULTS = {
     "Anthropic": "claude-sonnet-4-20250514",
@@ -351,10 +351,11 @@ with tab3:
                 st.error(f"Ingest failed: {e}")
                 
     with col7:
-        if st.button("📰 Ingest Blank News Disruptions", use_container_width=True, disabled=not pinecone_ready):
+        if st.button("📰 Ingest Live News Disruptions", use_container_width=True, disabled=not pinecone_ready):
             try:
-                with st.spinner("Embedding Geopolitical Events..."):
-                    st.session_state["vs"].ingest_disruptions(get_mock_disruptions())
+                with st.spinner("Fetching and Embedding Live Geopolitical Events..."):
+                    disruptions = get_live_disruptions(provider=st.session_state["provider"], model=st.session_state["model"])
+                    st.session_state["vs"].ingest_disruptions(disruptions)
                 st.success("Disruptions ingested into Vector DB.")
             except Exception as e:
                 st.error(f"Ingest failed: {e}")

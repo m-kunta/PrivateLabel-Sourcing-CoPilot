@@ -2,11 +2,17 @@
 # GitHub: https://github.com/m-kunta
 
 import datetime
+import json
+import logging
+import re
+import feedparser
+from bs4 import BeautifulSoup
+from llm_providers import get_llm_response
 
 def get_mock_disruptions():
     """
     Returns a curated list of mock disruption events.
-    In a real system, these would be parsed live from RSS feeds or News APIs.
+    Used as a fallback when live RSS feeds are unavailable or yield no supply chain disruptions.
     """
     now = datetime.datetime.now().strftime("%Y-%m-%d")
     
@@ -73,7 +79,111 @@ def get_mock_disruptions():
         }
     ]
 
+def clean_html(raw_html: str) -> str:
+    if not raw_html:
+        return ""
+    return BeautifulSoup(raw_html, "html.parser").get_text(separator=" ", strip=True)
+
+def parse_disruption_with_llm(headline: str, text: str, source: str, provider: str, model: str) -> dict:
+    system_prompt = """
+    You are an AI supply chain analyst. 
+    Analyze the following news item and extract disruption details as JSON.
+    If the news item does NOT describe a supply chain disruption, return {"is_disruption": false}.
+    If it DOES describe a disruption, return JSON strictly matching this schema:
+    {
+        "is_disruption": true,
+        "event_type": "<e.g., Port Congestion, Labor Action, Geopolitical Tension, Natural Disaster, Chokepoint Constraint>",
+        "location": "<Where it is happening>",
+        "severity": "<Low, Medium, High, or Critical>",
+        "affected_routes": ["<e.g., Asia-East Coast, Trans-Pacific, Europe-East Coast>"],
+        "headline": "<Original headline>",
+        "text": "<Summary of disruption>"
+    }
+    Return ONLY valid JSON.
+    """
+    
+    prompt = f"Source: {source}\nHeadline: {headline}\nBody: {text}"
+    
+    try:
+        response = get_llm_response(prompt=prompt, provider=provider, model=model, system_prompt=system_prompt)
+        json_str = response
+        match = re.search(r'\{.*\}', response, re.DOTALL)
+        if match:
+            json_str = match.group(0)
+        parsed = json.loads(json_str)
+        return parsed
+    except Exception as e:
+        logging.error(f"Error parsing disruption with LLM: {e}")
+        return {"is_disruption": False}
+
+def get_live_disruptions(provider="Anthropic", model="claude-sonnet-4-6", max_items=5):
+    feeds = [
+        {"url": "https://www.supplychaindive.com/feeds/news/", "source": "Supply Chain Dive"},
+        {"url": "https://www.logisticsmgmt.com/rss", "source": "Logistics Management"}
+    ]
+    
+    disruptions = []
+    today = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    for feed_info in feeds:
+        try:
+            parsed_feed = feedparser.parse(feed_info["url"])
+            if not parsed_feed.entries:
+                continue
+                
+            for entry in parsed_feed.entries[:max_items]:
+                headline = entry.get("title", "")
+                summary_html = entry.get("summary", "") or entry.get("description", "")
+                text = clean_html(summary_html)
+                
+                # Analyze with LLM
+                result = parse_disruption_with_llm(headline, text, feed_info["source"], provider, model)
+                
+                if result.get("is_disruption"):
+                    result.pop("is_disruption")
+                    result["date"] = today
+                    result["source"] = feed_info["source"]
+                    if "headline" not in result or not result["headline"]:
+                        result["headline"] = headline
+                    if "text" not in result or not result["text"]:
+                        result["text"] = text
+                        
+                    disruptions.append(result)
+                    
+        except Exception as e:
+            logging.error(f"Error fetching feed {feed_info['url']}: {e}")
+            
+    if not disruptions:
+        logging.warning("No live disruptions found or parsed. Falling back to mock data.")
+        return get_mock_disruptions()
+        
+    return disruptions
+
 if __name__ == "__main__":
-    disruptions = get_mock_disruptions()
+    import os
+    from dotenv import load_dotenv
+    load_dotenv()
+    
+    provider = os.getenv("LLM_PROVIDER", "Anthropic")
+    print(f"Fetching live disruptions using {provider}...")
+    
+    # Can configure to use whatever model is preferred for quick extraction
+    # Defaulting to a faster/cheaper model if Groq or Gemini is available
+    if provider == "Anthropic":
+        model = "claude-sonnet-4-6"
+    elif provider == "Groq":
+        model = "llama-3.3-70b-versatile"
+    elif provider == "Gemini":
+        model = "gemini-2.5-flash"
+    elif provider == "OpenAI":
+        model = "gpt-4o-mini"
+    else:
+        model = "llama3.2" # Ollama
+        
+    disruptions = get_live_disruptions(provider=provider, model=model)
+    
+    print(f"\nFound {len(disruptions)} disruptions:")
     for d in disruptions:
-        print(f"[{d['severity'].upper()}] {d['headline']}")
+        print(f"[{d['severity'].upper()}] {d.get('headline', 'No headline')}")
+        print(f"  Route: {', '.join(d.get('affected_routes', []))}")
+        print(f"  Location: {d.get('location', 'Unknown')}\n")
