@@ -72,9 +72,7 @@ with st.sidebar:
     if provider_changed:
         st.session_state["model"] = MODEL_DEFAULTS[provider]
 
-    model = st.text_input("Model Name", key="model")
-    st.session_state["provider"] = provider
-    st.session_state["model"] = model
+    st.text_input("Model Name", key="model")
     
     st.divider()
     
