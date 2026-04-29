@@ -5,7 +5,6 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
-import json
 from dotenv import load_dotenv
 
 from vector_store import VectorStore
@@ -55,35 +54,6 @@ if "model" not in st.session_state:
     )
 
 df = load_data()
-
-# Optional demo bootstrap for stable README screenshots and shareable walkthroughs.
-demo_mode = st.query_params.get("demo")
-if demo_mode == "savannah_results" and st.session_state.get("_demo_loaded") != demo_mode:
-    demo_scenario = (
-        "ILWU dockworkers at the Port of Savannah just declared a strike. "
-        "Which of our components are critically delayed?"
-    )
-    st.session_state["scenario_input"] = demo_scenario
-    demo_result_path = "assets/demo_savannah_result.json"
-    if os.path.exists(demo_result_path):
-        with open(demo_result_path, "r", encoding="utf-8") as demo_file:
-            st.session_state["last_analysis"] = json.load(demo_file)
-    else:
-        demo_chain = StrategicAnalystChain(
-            vector_store=st.session_state["vs"],
-            provider=st.session_state["provider"],
-            model=st.session_state["model"],
-        )
-        try:
-            st.session_state["last_analysis"] = demo_chain.analyze_scenario(demo_scenario, df)
-        except Exception:
-            fallback_chain = StrategicAnalystChain(
-                vector_store=None,
-                provider=st.session_state["provider"],
-                model=st.session_state["model"],
-            )
-            st.session_state["last_analysis"] = fallback_chain._fallback_analysis(demo_scenario, df)
-    st.session_state["_demo_loaded"] = demo_mode
 
 # Sidebar Configuration
 with st.sidebar:
@@ -256,15 +226,7 @@ with tab1:
                     result = chain.analyze_scenario(question, df)
                     st.session_state["last_analysis"] = result
                 except Exception as e:
-                    st.warning(
-                        "RAG analysis is unavailable right now. Falling back to heuristic mode for this scenario."
-                    )
-                    fallback_chain = StrategicAnalystChain(
-                        vector_store=None,
-                        provider=st.session_state["provider"],
-                        model=st.session_state["model"],
-                    )
-                    st.session_state["last_analysis"] = fallback_chain._fallback_analysis(question, df)
+                    st.error(f"Analysis Failed: {str(e)}")
 
     # Display Analysis Results
     res = st.session_state.get("last_analysis")
