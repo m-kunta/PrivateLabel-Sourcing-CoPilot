@@ -15,27 +15,70 @@
 
 **PL Sourcing Co-Pilot** is a RAG-powered AI prototype that answers strategic supply chain "what-if" questions for private label buyers. It combines a Pinecone vector knowledge base (vendor lead times + live disruption news) with an LLM reasoning chain to generate risk-ranked component tables and professional analyst briefings — in seconds.
 
-![Scenario Analyzer UI](assets/screenshot_scenario_analyzer.png)
-
 > **✅ Pinecone Active** | **🧠 Multi-LLM** | **📊 Risk Dashboard** | **🔴 Hormuz Toggle**
+
+## The Problem
+
+Private label teams at large retailers (Target, Costco, Walmart, Kroger) source raw materials directly from global suppliers under their own brand labels — True brand cotton, Frederick's cocoa butter, Casa Home wood pulp. These buyers face a structurally harder sourcing problem than branded goods buyers:
+
+1. **No buffer from brand-name intermediaries.** When a Port of Savannah strike delays a container ship, the private label cocoa butter buyer has no Nestlé procurement team shielding them. They absorb the delay directly.
+
+2. **Multi-tier opacity.** A cocoa butter shipment from Tema (Ghana) → Savannah → Baltimore touches three ocean freight legs, two consolidation points, and a trucking move. Each node can fail independently.
+
+3. **Asymmetric information.** Disruption news (Red Sea shipping reroutes, Panama Canal draft restrictions, West Africa cocoa harvest failure) is public but fragmented across freight news outlets, government advisories, and commodity reports. No private label team has the bandwidth to monitor and synthesize all of it.
+
+4. **Ripple-effect blindness.** A Savannah port slowdown doesn't just delay cotton — it delays the *spandex fiber*, the *thread*, and the *elastic trim* that all travel on the same East Coast lanes, affecting finished apparel in ways that aren't visible until shelf gaps appear.
+
+5. **Static lead time data.** Most buying teams work from spreadsheets with "standard lead times" that were last updated years ago and don't account for current route conditions.
+
+### The Cost
+
+- **Out-of-Stock Penalties:** Retail private label OOS (Out-of-Shelf) costs are estimated at 4–8% of annual category revenue.
+- **Emergency Air Freight:** Expedited air freight to cover a missed ocean shipment costs 6–10× the ocean rate.
+- **Markdown Risk:** Late raw material arrivals compress production schedules, forcing buyers into off-peak manufacturing slots at premium costs.
+- **Brand Credibility:** Private label is a loyalty driver. A consumer who can't find "True" brand organic cotton tees switches to a national brand — and may not come back.
 
 ---
 
-## How to Use
+## What The Copilot Does
 
-### The Problem in One Sentence
+PL Sourcing Co-Pilot closes that gap in three steps:
 
-Private label buying teams have **no rapid way to answer "what-if" disruption questions** — _"If Savannah strikes next week, which of our 40+ sourced components are at risk, and by how many days?"_ — before shelf gaps materialise and emergency air freight bills arrive.
+1. **Stores institutional knowledge** in Pinecone — vendor lead times, shipping routes, and route-vulnerability flags are indexed so the system understands why a disruption matters, not just what words appear in a query.
+2. **Reasons through the scenario** with an LLM acting as a Principal Supply Chain Strategist — applying disruption coefficients, tracing ripple effects, and classifying component risk across the sourced portfolio.
+3. **Delivers a decision-ready output** — a strategic briefing, key findings, recommended actions, and a ranked risk table that can be exported and shared with the buying team.
 
-### How This Solution Demonstrates the Answer
+---
 
-The Co-Pilot closes that gap in three steps:
+## Product Tour
 
-1. **Stores institutional knowledge** — vendor lead times, shipping routes, and route-vulnerability flags — in a Pinecone vector database so the system understands _why_ a Panama Canal drought affects Asia-East Coast apparel but not West Africa cocoa.
-2. **Reasons over a disruption scenario** — an LLM acting as a Principal Supply Chain Strategist applies heuristic disruption coefficients, traces second-order ripple effects, and risk-classifies every affected component (🔴 Red / 🟡 Yellow / 🟢 Green).
-3. **Delivers a decision-ready briefing** — executive summary, key findings, recommended actions, and a risk horizon — in seconds, formatted for a VP of Merchandising.
+### 1. Start With A What-If Scenario
 
-### Quick-Start Steps
+![Scenario Analyzer](assets/screenshot_scenario_analyzer_tour.png)
+
+_Enter a disruption scenario manually or launch a prebuilt event like Savannah labor action, Panama drought, or the 2026 Hormuz scenario._
+
+### 2. Review The AI Strategic Briefing
+
+![AI Briefing](assets/screenshot_ai_briefing_tour.png)
+
+_The app combines vector retrieval and LLM reasoning to generate a live analyst briefing, risk horizon, and supply impact narrative._
+
+### 3. Spot Structural Exposure Fast
+
+![Risk Dashboard](assets/screenshot_risk_dashboard_tour.png)
+
+_The dashboard surfaces category volatility and chokepoint concentration so teams can see which lanes and components are structurally fragile._
+
+### 4. Manage The Supply Intelligence Layer
+
+![Data Hub](assets/screenshot_data_hub_tour.png)
+
+_The Data Hub centralizes Pinecone setup, lead-time ingestion, disruption refreshes, and the raw sourcing data behind the analysis._
+
+---
+
+## Quick Start
 
 > **No Pinecone account?** Skip steps 3–5 — the app runs in **fallback mode** using `data/vendor_lead_times.csv` directly. Results are structurally identical.
 
@@ -73,30 +116,7 @@ Go to the **Scenario Analyzer** tab and try one of these:
 - *"Savannah port strike declared — which private label components are affected?"*
 - Use the **🔴 Hormuz Toggle** to model the 2026 Strait of Hormuz geopolitical scenario instantly.
 
-The output is a ranked risk table + an analyst briefing you can share directly with your buying team.
-
----
-
-## The Problem
-
-Private label teams at large retailers (Target, Costco, Walmart, Kroger) source raw materials directly from global suppliers under their own brand labels — True brand cotton, Frederick's cocoa butter, Casa Home wood pulp. These buyers face a structurally harder sourcing problem than branded goods buyers:
-
-1. **No buffer from brand-name intermediaries.** When a Port of Savannah strike delays a container ship, the private label cocoa butter buyer has no Nestlé procurement team shielding them. They absorb the delay directly.
-
-2. **Multi-tier opacity.** A cocoa butter shipment from Tema (Ghana) → Savannah → Baltimore touches three ocean freight legs, two consolidation points, and a trucking move. Each node can fail independently.
-
-3. **Asymmetric information.** Disruption news (Red Sea shipping reroutes, Panama Canal draft restrictions, West Africa cocoa harvest failure) is public but fragmented across freight news outlets, government advisories, and commodity reports. No private label team has the bandwidth to monitor and synthesize all of it.
-
-4. **Ripple-effect blindness.** A Savannah port slowdown doesn't just delay cotton — it delays the *spandex fiber*, the *thread*, and the *elastic trim* that all travel on the same East Coast lanes, affecting finished apparel in ways that aren't visible until shelf gaps appear.
-
-5. **Static lead time data.** Most buying teams work from spreadsheets with "standard lead times" that were last updated years ago and don't account for current route conditions.
-
-### The Cost
-
-- **Out-of-Stock Penalties:** Retail private label OOS (Out-of-Shelf) costs are estimated at 4–8% of annual category revenue.
-- **Emergency Air Freight:** Expedited air freight to cover a missed ocean shipment costs 6–10× the ocean rate.
-- **Markdown Risk:** Late raw material arrivals compress production schedules, forcing buyers into off-peak manufacturing slots at premium costs.
-- **Brand Credibility:** Private label is a loyalty driver. A consumer who can't find "True" brand organic cotton tees switches to a national brand — and may not come back.
+The output is a ranked risk table and analyst briefing that can be shared directly with sourcing, planning, and merchandising teams.
 
 ---
 
@@ -436,12 +456,6 @@ To run in fallback mode: just omit `PINECONE_API_KEY` from `.env`.
 | UI | Streamlit | Consistent with sibling projects; rapid prototyping |
 | News ingestion | `feedparser` + curated mock events | RSS is free; mock events ensure demo stability |
 | Data | Pandas + SQLite (future) | Same stack as `dc_outbound_smoothing` |
-
----
-
-## Risk Dashboard
-
-![Risk Dashboard](assets/screenshot_risk_dashboard.png)
 
 ---
 

@@ -1,0 +1,168 @@
+{
+  "ripple_effects": [
+    {
+      "primary_disruption": "ILWU Dockworker Strike at Port of Savannah",
+      "affected_route": "US East Coast Inbound via Port of Savannah",
+      "downstream_impacts": [
+        "Critical delays for Spandex Fiber (Frederick's Ingredients, Equatorial Ag Supply) with adjusted lead times up to 133 days, impacting apparel production.",
+        "Critical delays for Palm Oil (Global Threads Co.) with adjusted lead time up to 130 days, impacting confectionery and food production.",
+        "Critical delays for Cotton (Global Threads Co.) with adjusted lead time up to 126 days, impacting textile manufacturing.",
+        "Critical delays for Veneer (Equatorial Ag Supply) with adjusted lead time up to 109 days, impacting wood and furniture production.",
+        "Critical delays for PET Flakes (Nordic Wood Products) with adjusted lead time up to 109 days, impacting packaging production.",
+        "Critical delays for Glass Cullet (Global Threads Co., Frederick's Ingredients, True Brand Textiles) with adjusted lead times up to 108 days, impacting packaging production.",
+        "Critical delays for Recycled Cardboard (Casa Home Sourcing) with adjusted lead time up to 85 days, impacting packaging production.",
+        "Critical delays for Denim Fabric (Frederick's Ingredients) with adjusted lead time up to 67 days, impacting apparel production.",
+        "Overall production slowdowns and potential stockouts across Apparel/Textiles, Confectionery/Food, Wood/Furniture, and Packaging categories due to component shortages.",
+        "Terminal velocity dropped by 45%, leading to acute vessel bunching and dwell times increasing by 15-20 days at Savannah."
+      ]
+    }
+  ],
+  "briefing": {
+    "executive_summary": "The ILWU dockworker strike at the Port of Savannah is causing severe disruptions to inbound component supply, affecting a wide range of categories including Apparel/Textiles, Confectionery/Food, Wood/Furniture, and Packaging. Lead times for critical components have extended by 45-50%, with adjusted lead times now ranging from 67 to 133 days. This will lead to significant production delays and potential stockouts, exacerbated by vessel bunching and increased dwell times of 15-20 days at the port.",
+    "key_findings": [
+      "All identified 'Red' risk components are directly exposed to the Port of Savannah strike, leading to significant delays.",
+      "Components such as Spandex Fiber, Palm Oil, Cotton, Veneer, PET Flakes, Glass Cullet, Recycled Cardboard, and Denim Fabric face substantial lead time extensions, with the highest adjusted lead time reaching 133 days for Spandex Fiber.",
+      "The Port of Savannah is experiencing a 45% drop in terminal velocity, resulting in acute vessel bunching and increased dwell times of 15-20 days.",
+      "The impact spans across vital product categories: Apparel/Textiles, Confectionery/Food, Wood/Furniture, and Packaging, indicating broad supply chain vulnerability."
+    ],
+    "affected_categories": [
+      "Apparel/Textiles",
+      "Confectionery/Food",
+      "Wood/Furniture",
+      "Packaging"
+    ],
+    "recommended_actions": [
+      "Immediately identify all Purchase Orders (POs) routed via the Port of Savannah and assess direct impact on production schedules.",
+      "Explore alternative port options (e.g., Charleston, Jacksonville) and rerouting strategies, while evaluating associated costs and extended transit times.",
+      "Communicate proactively with all affected vendors to understand their contingency plans and updated delivery estimates.",
+      "Evaluate current inventory levels for all critically delayed components to mitigate immediate production halts and plan for potential buffer stock.",
+      "Develop contingency plans for potential production line adjustments, temporary shutdowns, or substitute component sourcing.",
+      "Monitor ILWU strike negotiations closely for any updates on a resolution and its potential impact on port operations."
+    ],
+    "risk_horizon": "Short to Medium-term (Estimated 1-3 months), dependent on the duration and resolution of the ILWU strike and subsequent port recovery to clear backlogs."
+  },
+  "risk_table": [
+    {
+      "vendor": "Frederick's Ingredients",
+      "component": "Spandex Fiber",
+      "category": "Apparel/Textiles",
+      "origin": "Salalah, Oman",
+      "base_lead_days": 89,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 133,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Global Threads Co.",
+      "component": "Palm Oil",
+      "category": "Confectionery/Food",
+      "origin": "Cartagena, Colombia",
+      "base_lead_days": 87,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 130,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Global Threads Co.",
+      "component": "Cotton",
+      "category": "Apparel/Textiles",
+      "origin": "Chittagong, Bangladesh",
+      "base_lead_days": 84,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 126,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Equatorial Ag Supply",
+      "component": "Veneer",
+      "category": "Wood/Furniture",
+      "origin": "Cartagena, Colombia",
+      "base_lead_days": 73,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 109,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Nordic Wood Products",
+      "component": "PET Flakes",
+      "category": "Packaging",
+      "origin": "Jebel Ali, UAE",
+      "base_lead_days": 73,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 109,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Global Threads Co.",
+      "component": "Glass Cullet",
+      "category": "Packaging",
+      "origin": "Jebel Ali, UAE",
+      "base_lead_days": 72,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 108,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Frederick's Ingredients",
+      "component": "Glass Cullet",
+      "category": "Packaging",
+      "origin": "Jebel Ali, UAE",
+      "base_lead_days": 59,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 88,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "True Brand Textiles",
+      "component": "Glass Cullet",
+      "category": "Packaging",
+      "origin": "Salalah, Oman",
+      "base_lead_days": 58,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 87,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Casa Home Sourcing",
+      "component": "Recycled Cardboard",
+      "category": "Packaging",
+      "origin": "Shenzhen, China",
+      "base_lead_days": 57,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 85,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Equatorial Ag Supply",
+      "component": "Spandex Fiber",
+      "category": "Apparel/Textiles",
+      "origin": "Jebel Ali, UAE",
+      "base_lead_days": 56,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 84,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    },
+    {
+      "vendor": "Frederick's Ingredients",
+      "component": "Denim Fabric",
+      "category": "Apparel/Textiles",
+      "origin": "Salalah, Oman",
+      "base_lead_days": 45,
+      "disruption_coefficient": 1.5,
+      "adjusted_lead_days": 67,
+      "risk_level": "Red",
+      "risk_rationale": "Exposed to Port of Savannah."
+    }
+  ],
+  "source": "rag+llm"
+}
