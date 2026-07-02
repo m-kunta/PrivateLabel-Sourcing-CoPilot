@@ -54,6 +54,20 @@ def test_vector_store_init_without_key_is_not_ready():
     assert vs.is_ready() is False
 
 
+def test_is_ready_uses_cached_ready_state_after_index_initialized(monkeypatch):
+    vs = VectorStore(api_key=None)
+    vs._initialized = True
+    vs._ready = True
+    vs.index = FakeIndex()
+
+    def broken_index_exists():
+        raise RuntimeError("network hiccup")
+
+    monkeypatch.setattr(vs, "_index_exists", broken_index_exists)
+
+    assert vs.is_ready() is True
+
+
 def test_vector_store_init_with_existing_index(monkeypatch):
     fake_pinecone_module = types.SimpleNamespace(Pinecone=FakePineconeClient)
     monkeypatch.setitem(sys.modules, "pinecone", fake_pinecone_module)

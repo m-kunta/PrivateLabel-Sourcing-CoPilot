@@ -14,6 +14,7 @@ class VectorStore:
         self.index = None
         self._embedder = None
         self._initialized = False
+        self._ready = False
         
         if self.api_key:
             try:
@@ -21,6 +22,7 @@ class VectorStore:
                 self.pc = Pinecone(api_key=self.api_key)
                 if self._index_exists():
                     self.index = self.pc.Index(self.index_name)
+                    self._ready = True
                 self._initialized = True
             except Exception as e:
                 print(f"Warning: Failed to initialize Pinecone: {e}")
@@ -41,8 +43,14 @@ class VectorStore:
         return self.index_name in [idx.name for idx in self.pc.list_indexes()]
 
     def is_ready(self) -> bool:
-        """Returns True if Pinecone is configured and the index exists."""
-        return self._initialized and self._index_exists()
+        """Returns True if Pinecone is configured and the index has been initialized."""
+        if self._ready and self.index is not None:
+            return True
+        try:
+            self._ready = self._initialized and self._index_exists()
+        except Exception as e:
+            print(f"Warning: Failed to check Pinecone readiness: {e}")
+        return self._ready and self.index is not None
 
     def init_index(self):
         """Creates the Pinecone index if it doesn't exist."""
@@ -63,6 +71,7 @@ class VectorStore:
                 )
             )
         self.index = self.pc.Index(self.index_name)
+        self._ready = True
         print(f"✅ Index '{self.index_name}' is ready.")
 
     def ingest_lead_times(self, csv_path: str):
