@@ -24,6 +24,9 @@ source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
 
 # Install the required dependencies
 pip install -r requirements.txt
+
+# Optional: install test tooling for development
+pip install -r requirements-dev.txt
 ```
 
 ### Configuration
