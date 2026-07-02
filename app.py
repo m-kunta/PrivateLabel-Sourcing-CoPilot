@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from vector_store import VectorStore
 from scenario_engine import StrategicAnalystChain
 from rss_ingest import get_live_disruptions
+from llm_providers import validate_provider_config
 
 MODEL_DEFAULTS = {
     "Anthropic": "claude-sonnet-4-20250514",
@@ -73,6 +74,9 @@ with st.sidebar:
         st.session_state["model"] = MODEL_DEFAULTS[provider]
 
     st.text_input("Model Name", key="model")
+    provider_error = validate_provider_config(st.session_state["provider"])
+    if provider_error:
+        st.error(provider_error)
     
     st.divider()
     
@@ -217,6 +221,10 @@ with tab1:
             st.warning("Please enter a scenario.")
         else:
             with st.spinner("🧠 Initializing Strategic Analyst Chain..."):
+                provider_error = validate_provider_config(st.session_state["provider"])
+                if provider_error:
+                    st.error(provider_error)
+                    st.stop()
                 chain = StrategicAnalystChain(
                     vector_store=st.session_state["vs"], 
                     provider=st.session_state["provider"], 
