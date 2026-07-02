@@ -215,7 +215,10 @@ with tab1:
         st.button("💧 Panama Canal Drought (-50%)", on_click=set_scenario, args=("The Panama Canal has implemented a 50% transit reduction. Show me the impact on our East Coast furniture routing.",))
         st.button("⚓ Savannah Labor Strike", on_click=set_scenario, args=("ILWU dockworkers at the Port of Savannah just declared a strike. Which of our components are critically delayed?",))
 
-    if st.button("Analyze Scenario", type="primary", use_container_width=True):
+    if df.empty:
+        st.warning("Lead time data is empty. Run `python data_gen.py` before analyzing scenarios.")
+
+    if st.button("Analyze Scenario", type="primary", use_container_width=True, disabled=df.empty):
         # We read from the text_area's value (which is stored in 'scenario_input' or local 'question')
         if not question:
             st.warning("Please enter a scenario.")
@@ -316,12 +319,26 @@ with tab2:
         with col4:
             route_counts = df.melt(
                 id_vars=['component'], 
-                value_vars=['panama_canal_exposure', 'suez_canal_exposure', 'savannah_port_exposure', 'west_africa_port_exposure'],
+                value_vars=[
+                    'panama_canal_exposure',
+                    'suez_canal_exposure',
+                    'savannah_port_exposure',
+                    'west_africa_port_exposure',
+                    'hrmz_exposure',
+                ],
                 var_name='Chokepoint', value_name='Exposed'
             )
             route_counts = route_counts[route_counts['Exposed'] == 1]['Chokepoint'].value_counts().reset_index()
             route_counts.columns = ['Chokepoint', 'Component Count']
-            route_counts['Chokepoint'] = route_counts['Chokepoint'].str.replace('_exposure', '').str.replace('_', ' ').str.title()
+            label_map = {
+                "panama_canal": "Panama Canal",
+                "suez_canal": "Suez Canal",
+                "savannah_port": "Port Of Savannah",
+                "west_africa_port": "West Africa Ports",
+                "hrmz": "Strait Of Hormuz",
+            }
+            route_counts['Chokepoint'] = route_counts['Chokepoint'].str.replace('_exposure', '')
+            route_counts['Chokepoint'] = route_counts['Chokepoint'].map(label_map).fillna(route_counts['Chokepoint'])
             
             fig2 = px.bar(route_counts, x='Chokepoint', y='Component Count', title="Portfolio Exposure to Chokepoints", color="Chokepoint")
             st.plotly_chart(fig2, use_container_width=True)
