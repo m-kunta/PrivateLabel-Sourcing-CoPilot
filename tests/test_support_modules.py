@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from data_gen import generate_synthetic_data
-from llm_providers import get_llm_response
+from llm_providers import get_llm_response, validate_provider_config
 from rss_ingest import get_mock_disruptions
 
 
@@ -33,3 +33,15 @@ def test_generate_synthetic_data_writes_expected_csv(tmp_path, monkeypatch):
 def test_get_llm_response_unsupported_provider_raises():
     with pytest.raises(ValueError, match="Unsupported LLM provider: UnknownProvider"):
         get_llm_response("prompt", "UnknownProvider", "model")
+
+
+def test_validate_provider_config_reports_missing_key(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    error = validate_provider_config("OpenAI")
+
+    assert error == "OpenAI selected but OPENAI_API_KEY is not set."
+
+
+def test_validate_provider_config_accepts_ollama_without_key():
+    assert validate_provider_config("Ollama") is None

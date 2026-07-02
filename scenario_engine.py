@@ -5,6 +5,7 @@ import json
 import re
 import pandas as pd
 from typing import Dict, Any, List, Optional
+from disruption_model import build_risk_row, classify_risk, classify_scenario
 from vector_store import VectorStore
 import llm_providers
 
@@ -70,82 +71,94 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
     def _parse_response(self, text: str) -> Dict[str, Any]:
         """Safely parses JSON, stripping markdown code blocks if necessary."""
         try:
-            return json.loads(text)
+            return self._normalize_response(json.loads(text))
         except json.JSONDecodeError:
             pass
             
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             try:
-                return json.loads(match.group(0))
+                return self._normalize_response(json.loads(match.group(0)))
             except json.JSONDecodeError:
                 pass
                 
         raise ValueError(f"Failed to parse LLM response into JSON. Raw output: {text[:200]}...")
 
+    def _normalize_response(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
+        briefing = parsed.get("briefing") if isinstance(parsed.get("briefing"), dict) else {}
+        parsed["risk_table"] = parsed.get("risk_table") if isinstance(parsed.get("risk_table"), list) else []
+        parsed["ripple_effects"] = parsed.get("ripple_effects") if isinstance(parsed.get("ripple_effects"), list) else []
+        parsed["briefing"] = {
+            "executive_summary": briefing.get("executive_summary", ""),
+            "key_findings": briefing.get("key_findings") if isinstance(briefing.get("key_findings"), list) else [],
+            "affected_categories": briefing.get("affected_categories") if isinstance(briefing.get("affected_categories"), list) else [],
+            "recommended_actions": briefing.get("recommended_actions") if isinstance(briefing.get("recommended_actions"), list) else [],
+            "risk_horizon": briefing.get("risk_horizon", "Unknown"),
+        }
+        return parsed
+
+    def _degraded_result(
+        self,
+        scenario: str,
+        risk_table: List[Dict[str, Any]],
+        source: str,
+        error: Exception,
+    ) -> Dict[str, Any]:
+        return {
+            "risk_table": risk_table,
+            "ripple_effects": [{
+                "primary_disruption": scenario,
+                "affected_route": "Multiple",
+                "downstream_impacts": [f"Briefing generation failed: {error}"],
+            }],
+            "briefing": {
+                "executive_summary": "Risk table generated successfully, but the LLM briefing could not be produced.",
+                "key_findings": ["Structured risk scoring completed", "Narrative briefing unavailable"],
+                "affected_categories": sorted({row.get("category", "Unknown") for row in risk_table}),
+                "recommended_actions": ["Review the risk table and contact affected vendors directly"],
+                "risk_horizon": "Unknown",
+            },
+            "source": source,
+        }
+
+    def _risk_table_from_rows(self, rows, disruption) -> List[Dict[str, Any]]:
+        risk_table = []
+        seen = set()
+        for row in rows:
+            try:
+                risk_row = build_risk_row(row, disruption)
+                if not risk_row:
+                    continue
+                key = self._risk_row_key(risk_row)
+                if key in seen:
+                    continue
+                seen.add(key)
+                risk_table.append(risk_row)
+            except (ValueError, TypeError):
+                continue
+        return risk_table
+
+    def _risk_row_key(self, risk_row: Dict[str, Any]) -> tuple:
+        return (
+            risk_row["vendor"],
+            risk_row["component"],
+            risk_row["origin"],
+            risk_row["base_lead_days"],
+        )
+
     def _classify_risk(self, base: int, adjusted: int) -> str:
-        ratio = adjusted / base if base > 0 else 1.0
-        if ratio > 1.35:
-            return "Red"
-        elif ratio > 1.15:
-            return "Yellow"
-        return "Green"
+        return classify_risk(base, adjusted)
 
     def _fallback_analysis(self, scenario: str, raw_df: pd.DataFrame) -> Dict[str, Any]:
         """Heuristic calculation when Pinecone is unavailable."""
         
-        scenario_lower = scenario.lower()
-        coeff_key = None
-        if "panama" in scenario_lower: coeff_key = "panama"
-        elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
-        elif "savannah" in scenario_lower: coeff_key = "savannah"
-        elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
-        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
-        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
-        
         risk_table = []
-        for _, row in raw_df.iterrows():
-            coeff = 1.0
-            rationale = "No direct route exposure detected."
-            
-            # Use .get() defensively for exposure flags that might be missing
-            panama_exposure = row.get('panama_canal_exposure', 0)
-            suez_exposure = row.get('suez_canal_exposure', 0)
-            savannah_exposure = row.get('savannah_port_exposure', 0)
-            wa_exposure = row.get('west_africa_port_exposure', 0)
-            hrmz_exposure = row.get('hrmz_exposure', 0)
-            
-            if coeff_key == "panama" and panama_exposure == 1:
-                coeff = self.heuristic_coefficients["panama"]
-                rationale = "Exposed to Panama Canal drought/transit constraints."
-            elif coeff_key == "suez" and suez_exposure == 1:
-                coeff = self.heuristic_coefficients["suez"]
-                rationale = "Exposed to Suez Canal / Red Sea rerouting."
-            elif coeff_key == "savannah" and savannah_exposure == 1:
-                coeff = self.heuristic_coefficients["savannah"]
-                rationale = "Exposed to Port of Savannah congestion/labor action."
-            elif coeff_key == "west_africa" and wa_exposure == 1:
-                coeff = self.heuristic_coefficients["west_africa"]
-                rationale = "Exposed to West Africa port congestion."
-            elif coeff_key == "hrmz" and hrmz_exposure == 1:
-                coeff = self.heuristic_coefficients["hrmz"]
-                rationale = "Exposed to Strait of Hormuz blockage (+ fuel surcharge)."
-                
-            adj = int(row['base_lead_days'] * coeff)
-            risk = self._classify_risk(int(row['base_lead_days']), adj)
-            
-            if coeff > 1.0:
-                risk_table.append({
-                    "vendor": row['vendor_name'],
-                    "component": row['component'],
-                    "category": row['category'],
-                    "origin": f"{row['origin_port']}, {row['origin_country']}",
-                    "base_lead_days": int(row['base_lead_days']),
-                    "disruption_coefficient": coeff,
-                    "adjusted_lead_days": adj,
-                    "risk_level": risk,
-                    "risk_rationale": rationale
-                })
+        disruption = classify_scenario(scenario)
+        if disruption:
+            for _, row in raw_df.iterrows():
+                risk_row = build_risk_row(row, disruption)
+                if risk_row:
+                    risk_table.append(risk_row)
         
         risk_table = sorted(risk_table, key=lambda x: x["adjusted_lead_days"], reverse=True)[:15]
 
@@ -160,18 +173,7 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
             parsed["source"] = "fallback"
             return parsed
         except Exception as e:
-            return {
-                "risk_table": risk_table,
-                "ripple_effects": [{"primary_disruption": scenario, "affected_route": "Multiple", "downstream_impacts": [f"LLM Error: {e}"]}],
-                "briefing": {
-                    "executive_summary": "System operated in degraded fallback mode with LLM failure.",
-                    "key_findings": ["LLM generation failed", "Heuristics applied directly"],
-                    "affected_categories": [],
-                    "recommended_actions": ["Review detailed risk table manually"],
-                    "risk_horizon": "Unknown"
-                },
-                "source": "fallback"
-            }
+            return self._degraded_result(scenario, risk_table, "fallback", e)
 
     def analyze_scenario(self, scenario: str, raw_df: pd.DataFrame) -> Dict[str, Any]:
         if not self.vs or not self.vs.is_ready():
@@ -181,55 +183,19 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         disruption_context = self.vs.query(scenario, "disruptions", top_k=5)
         
         # --- Step 1: Compute risk table in Python from retrieved vector data ---
-        # Derive the disruption coefficient from the scenario text
-        scenario_lower = scenario.lower()
-        coeff_key = None
-        if "panama" in scenario_lower: coeff_key = "panama"
-        elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
-        elif "savannah" in scenario_lower: coeff_key = "savannah"
-        elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
-        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
-        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
+        disruption = classify_scenario(scenario)
+        if not disruption:
+            return self._fallback_analysis(scenario, raw_df)
         
-        risk_table = []
-        # Try to build risk table from retrieved vector context first
-        for item in lead_time_context:
-            try:
-                base = int(float(item.get("base_lead_days", 30)))
-                coeff = 1.0
-                rationale = "No direct route exposure detected based on vector context."
-                
-                if coeff_key == "panama" and item.get("panama_canal_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["panama"]
-                    rationale = "Exposed to Panama Canal constraints."
-                elif coeff_key == "suez" and item.get("suez_canal_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["suez"]
-                    rationale = "Exposed to Suez Canal / Red Sea rerouting."
-                elif coeff_key == "savannah" and item.get("savannah_port_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["savannah"]
-                    rationale = "Exposed to Port of Savannah."
-                elif coeff_key == "west_africa" and item.get("west_africa_port_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["west_africa"]
-                    rationale = "Exposed to West Africa ports."
-                elif coeff_key == "hrmz" and item.get("hrmz_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["hrmz"]
-                    rationale = "Exposed to Strait of Hormuz (+ fuel surcharge)."
-                
-                if coeff > 1.0:
-                    adj = int(base * coeff)
-                    risk_table.append({
-                        "vendor": item.get("vendor_name", "Unknown"),
-                        "component": item.get("component", "Unknown"),
-                        "category": item.get("category", "Unknown"),
-                        "origin": f"{item.get('origin_port', '')}, {item.get('origin_country', '')}",
-                        "base_lead_days": base,
-                        "disruption_coefficient": coeff,
-                        "adjusted_lead_days": adj,
-                        "risk_level": self._classify_risk(base, adj),
-                        "risk_rationale": rationale
-                    })
-            except (ValueError, TypeError):
-                continue
+        # Score retrieved vector rows first, then backfill from the full portfolio
+        # so top-k semantic retrieval cannot hide exposed components.
+        vector_rows = self._risk_table_from_rows(lead_time_context, disruption)
+        full_rows = self._risk_table_from_rows((row for _, row in raw_df.iterrows()), disruption)
+        seen_vector = {self._risk_row_key(row) for row in vector_rows}
+        risk_table = vector_rows + [
+            row for row in full_rows
+            if self._risk_row_key(row) not in seen_vector
+        ]
         
         # If no risk items from vector context, fall back to full df
         if not risk_table:
@@ -261,4 +227,4 @@ Respond strictly with this JSON schema (no markdown fences):
             parsed["source"] = "rag+llm"
             return parsed
         except Exception as e:
-            raise ValueError(f"Failed to generate scenario analysis: {e}")
+            return self._degraded_result(scenario, risk_table, "rag+llm-degraded", e)

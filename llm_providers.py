@@ -4,8 +4,33 @@
 import os
 from typing import Optional
 
+
+PROVIDER_ENV_KEYS = {
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+    "gemini": "GEMINI_API_KEY",
+    "groq": "GROQ_API_KEY",
+}
+
+
+def validate_provider_config(provider: str) -> Optional[str]:
+    provider_key = (provider or "").lower()
+    env_key = PROVIDER_ENV_KEYS.get(provider_key)
+    if provider_key == "ollama":
+        return None
+    if not env_key:
+        return f"Unsupported LLM provider: {provider}"
+    if not os.getenv(env_key):
+        return f"{provider} selected but {env_key} is not set."
+    return None
+
+
 def get_llm_response(prompt: str, provider: str, model: str, system_prompt: Optional[str] = None) -> str:
     """Factory to get responses from different LLM providers."""
+    config_error = validate_provider_config(provider)
+    if config_error:
+        raise ValueError(config_error)
+
     # Anthropic
     if provider.lower() == "anthropic":
         import anthropic
