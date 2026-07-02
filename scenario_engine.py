@@ -5,6 +5,7 @@ import json
 import re
 import pandas as pd
 from typing import Dict, Any, List, Optional
+from disruption_model import build_risk_row, classify_risk, classify_scenario
 from vector_store import VectorStore
 import llm_providers
 
@@ -84,68 +85,18 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         raise ValueError(f"Failed to parse LLM response into JSON. Raw output: {text[:200]}...")
 
     def _classify_risk(self, base: int, adjusted: int) -> str:
-        ratio = adjusted / base if base > 0 else 1.0
-        if ratio > 1.35:
-            return "Red"
-        elif ratio > 1.15:
-            return "Yellow"
-        return "Green"
+        return classify_risk(base, adjusted)
 
     def _fallback_analysis(self, scenario: str, raw_df: pd.DataFrame) -> Dict[str, Any]:
         """Heuristic calculation when Pinecone is unavailable."""
         
-        scenario_lower = scenario.lower()
-        coeff_key = None
-        if "panama" in scenario_lower: coeff_key = "panama"
-        elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
-        elif "savannah" in scenario_lower: coeff_key = "savannah"
-        elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
-        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
-        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
-        
         risk_table = []
-        for _, row in raw_df.iterrows():
-            coeff = 1.0
-            rationale = "No direct route exposure detected."
-            
-            # Use .get() defensively for exposure flags that might be missing
-            panama_exposure = row.get('panama_canal_exposure', 0)
-            suez_exposure = row.get('suez_canal_exposure', 0)
-            savannah_exposure = row.get('savannah_port_exposure', 0)
-            wa_exposure = row.get('west_africa_port_exposure', 0)
-            hrmz_exposure = row.get('hrmz_exposure', 0)
-            
-            if coeff_key == "panama" and panama_exposure == 1:
-                coeff = self.heuristic_coefficients["panama"]
-                rationale = "Exposed to Panama Canal drought/transit constraints."
-            elif coeff_key == "suez" and suez_exposure == 1:
-                coeff = self.heuristic_coefficients["suez"]
-                rationale = "Exposed to Suez Canal / Red Sea rerouting."
-            elif coeff_key == "savannah" and savannah_exposure == 1:
-                coeff = self.heuristic_coefficients["savannah"]
-                rationale = "Exposed to Port of Savannah congestion/labor action."
-            elif coeff_key == "west_africa" and wa_exposure == 1:
-                coeff = self.heuristic_coefficients["west_africa"]
-                rationale = "Exposed to West Africa port congestion."
-            elif coeff_key == "hrmz" and hrmz_exposure == 1:
-                coeff = self.heuristic_coefficients["hrmz"]
-                rationale = "Exposed to Strait of Hormuz blockage (+ fuel surcharge)."
-                
-            adj = int(row['base_lead_days'] * coeff)
-            risk = self._classify_risk(int(row['base_lead_days']), adj)
-            
-            if coeff > 1.0:
-                risk_table.append({
-                    "vendor": row['vendor_name'],
-                    "component": row['component'],
-                    "category": row['category'],
-                    "origin": f"{row['origin_port']}, {row['origin_country']}",
-                    "base_lead_days": int(row['base_lead_days']),
-                    "disruption_coefficient": coeff,
-                    "adjusted_lead_days": adj,
-                    "risk_level": risk,
-                    "risk_rationale": rationale
-                })
+        disruption = classify_scenario(scenario)
+        if disruption:
+            for _, row in raw_df.iterrows():
+                risk_row = build_risk_row(row, disruption)
+                if risk_row:
+                    risk_table.append(risk_row)
         
         risk_table = sorted(risk_table, key=lambda x: x["adjusted_lead_days"], reverse=True)[:15]
 
@@ -181,53 +132,17 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         disruption_context = self.vs.query(scenario, "disruptions", top_k=5)
         
         # --- Step 1: Compute risk table in Python from retrieved vector data ---
-        # Derive the disruption coefficient from the scenario text
-        scenario_lower = scenario.lower()
-        coeff_key = None
-        if "panama" in scenario_lower: coeff_key = "panama"
-        elif "suez" in scenario_lower or "red sea" in scenario_lower: coeff_key = "suez"
-        elif "savannah" in scenario_lower: coeff_key = "savannah"
-        elif "tema" in scenario_lower or "west africa" in scenario_lower or "abidjan" in scenario_lower: coeff_key = "west_africa"
-        elif "hormuz" in scenario_lower or "strait" in scenario_lower: coeff_key = "hrmz"
-        elif "israel" in scenario_lower or "egypt" in scenario_lower or "middle east" in scenario_lower: coeff_key = "hrmz"
+        disruption = classify_scenario(scenario)
+        if not disruption:
+            return self._fallback_analysis(scenario, raw_df)
         
         risk_table = []
         # Try to build risk table from retrieved vector context first
         for item in lead_time_context:
             try:
-                base = int(float(item.get("base_lead_days", 30)))
-                coeff = 1.0
-                rationale = "No direct route exposure detected based on vector context."
-                
-                if coeff_key == "panama" and item.get("panama_canal_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["panama"]
-                    rationale = "Exposed to Panama Canal constraints."
-                elif coeff_key == "suez" and item.get("suez_canal_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["suez"]
-                    rationale = "Exposed to Suez Canal / Red Sea rerouting."
-                elif coeff_key == "savannah" and item.get("savannah_port_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["savannah"]
-                    rationale = "Exposed to Port of Savannah."
-                elif coeff_key == "west_africa" and item.get("west_africa_port_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["west_africa"]
-                    rationale = "Exposed to West Africa ports."
-                elif coeff_key == "hrmz" and item.get("hrmz_exposure", 0) == 1:
-                    coeff = self.heuristic_coefficients["hrmz"]
-                    rationale = "Exposed to Strait of Hormuz (+ fuel surcharge)."
-                
-                if coeff > 1.0:
-                    adj = int(base * coeff)
-                    risk_table.append({
-                        "vendor": item.get("vendor_name", "Unknown"),
-                        "component": item.get("component", "Unknown"),
-                        "category": item.get("category", "Unknown"),
-                        "origin": f"{item.get('origin_port', '')}, {item.get('origin_country', '')}",
-                        "base_lead_days": base,
-                        "disruption_coefficient": coeff,
-                        "adjusted_lead_days": adj,
-                        "risk_level": self._classify_risk(base, adj),
-                        "risk_rationale": rationale
-                    })
+                risk_row = build_risk_row(item, disruption)
+                if risk_row:
+                    risk_table.append(risk_row)
             except (ValueError, TypeError):
                 continue
         

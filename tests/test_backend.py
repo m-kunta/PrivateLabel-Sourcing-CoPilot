@@ -115,6 +115,48 @@ def test_fallback_schema_fallback(mock_df):
         scenario_engine.llm_providers.get_llm_response = original_get_llm_response
 
 
+def test_panama_50_percent_uses_severe_coefficient(monkeypatch):
+    _mock_llm(monkeypatch)
+    chain = StrategicAnalystChain(vector_store=None)
+    df = pd.DataFrame([{
+        "vendor_name": "Panama Vendor",
+        "component": "Furniture",
+        "category": "Wood/Furniture",
+        "origin_port": "Shenzhen",
+        "origin_country": "China",
+        "base_lead_days": 60,
+        "panama_canal_exposure": 1,
+        "suez_canal_exposure": 0,
+        "savannah_port_exposure": 0,
+        "west_africa_port_exposure": 0,
+        "hrmz_exposure": 0,
+    }])
+
+    res = chain._fallback_analysis("Panama Canal 50% transit reduction", df)
+
+    assert res["risk_table"][0]["disruption_coefficient"] == 1.55
+    assert res["risk_table"][0]["adjusted_lead_days"] == 93
+    assert res["risk_table"][0]["risk_level"] == "Red"
+
+
+def test_bangladesh_flooding_supported_in_fallback(monkeypatch):
+    _mock_llm(monkeypatch)
+    chain = StrategicAnalystChain(vector_store=None)
+    df = pd.DataFrame([{
+        "vendor_name": "Bangladesh Vendor",
+        "component": "Cotton",
+        "category": "Apparel/Textiles",
+        "origin_port": "Chittagong",
+        "origin_country": "Bangladesh",
+        "base_lead_days": 45,
+    }])
+
+    res = chain._fallback_analysis("Bangladesh flooding disrupts Chittagong roads", df)
+
+    assert len(res["risk_table"]) == 1
+    assert res["risk_table"][0]["disruption_coefficient"] == 1.30
+
+
 # ---------------------------------------------------------------------------
 # Helpers shared by the new test classes
 # ---------------------------------------------------------------------------
