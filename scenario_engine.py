@@ -121,6 +121,31 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
             "source": source,
         }
 
+    def _risk_table_from_rows(self, rows, disruption) -> List[Dict[str, Any]]:
+        risk_table = []
+        seen = set()
+        for row in rows:
+            try:
+                risk_row = build_risk_row(row, disruption)
+                if not risk_row:
+                    continue
+                key = self._risk_row_key(risk_row)
+                if key in seen:
+                    continue
+                seen.add(key)
+                risk_table.append(risk_row)
+            except (ValueError, TypeError):
+                continue
+        return risk_table
+
+    def _risk_row_key(self, risk_row: Dict[str, Any]) -> tuple:
+        return (
+            risk_row["vendor"],
+            risk_row["component"],
+            risk_row["origin"],
+            risk_row["base_lead_days"],
+        )
+
     def _classify_risk(self, base: int, adjusted: int) -> str:
         return classify_risk(base, adjusted)
 
@@ -162,15 +187,15 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
         if not disruption:
             return self._fallback_analysis(scenario, raw_df)
         
-        risk_table = []
-        # Try to build risk table from retrieved vector context first
-        for item in lead_time_context:
-            try:
-                risk_row = build_risk_row(item, disruption)
-                if risk_row:
-                    risk_table.append(risk_row)
-            except (ValueError, TypeError):
-                continue
+        # Score retrieved vector rows first, then backfill from the full portfolio
+        # so top-k semantic retrieval cannot hide exposed components.
+        vector_rows = self._risk_table_from_rows(lead_time_context, disruption)
+        full_rows = self._risk_table_from_rows((row for _, row in raw_df.iterrows()), disruption)
+        seen_vector = {self._risk_row_key(row) for row in vector_rows}
+        risk_table = vector_rows + [
+            row for row in full_rows
+            if self._risk_row_key(row) not in seen_vector
+        ]
         
         # If no risk items from vector context, fall back to full df
         if not risk_table:

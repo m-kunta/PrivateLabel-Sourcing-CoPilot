@@ -103,7 +103,7 @@ def test_analyze_scenario_rag_success(monkeypatch, raw_df):
     ]
 
 
-def test_analyze_scenario_rag_no_exposed_matches_falls_back(monkeypatch, raw_df):
+def test_analyze_scenario_rag_no_exposed_matches_backfills_from_dataframe(monkeypatch, raw_df):
     vs = FakeVectorStore(
         ready=True,
         lead_time_context=[
@@ -124,14 +124,16 @@ def test_analyze_scenario_rag_no_exposed_matches_falls_back(monkeypatch, raw_df)
     )
     chain = StrategicAnalystChain(vector_store=vs)
 
-    def fake_fallback(scenario, df):
-        return {"source": "fallback", "risk_table": ["used-fallback"]}
-
-    monkeypatch.setattr(chain, "_fallback_analysis", fake_fallback)
+    monkeypatch.setattr(
+        scenario_engine.llm_providers,
+        "get_llm_response",
+        lambda *args, **kwargs: '{"ripple_effects": [], "briefing": {"executive_summary": "ok"}}',
+    )
 
     result = chain.analyze_scenario("panama canal drought", raw_df)
 
-    assert result == {"source": "fallback", "risk_table": ["used-fallback"]}
+    assert result["source"] == "rag+llm"
+    assert result["risk_table"][0]["vendor"] == "Fallback Vendor"
 
 
 def test_analyze_scenario_rag_llm_failure_is_degraded(monkeypatch, raw_df):
@@ -195,6 +197,44 @@ def test_analyze_scenario_rag_llm_failure_returns_degraded_schema(monkeypatch, r
     assert result["risk_table"][0]["vendor"] == "Vector Vendor"
     assert "executive_summary" in result["briefing"]
     assert result["ripple_effects"]
+
+
+def test_rag_backfills_exposed_rows_from_full_dataframe(monkeypatch):
+    raw_df = pd.DataFrame([
+        {
+            "vendor_name": "Retrieved Vendor",
+            "component": "Cotton",
+            "category": "Apparel/Textiles",
+            "origin_port": "Shenzhen",
+            "origin_country": "China",
+            "base_lead_days": 40,
+            "panama_canal_exposure": 1,
+        },
+        {
+            "vendor_name": "Missed Vendor",
+            "component": "MDF",
+            "category": "Wood/Furniture",
+            "origin_port": "Mumbai",
+            "origin_country": "India",
+            "base_lead_days": 60,
+            "panama_canal_exposure": 1,
+        },
+    ])
+    vs = FakeVectorStore(
+        ready=True,
+        lead_time_context=[raw_df.iloc[0].to_dict()],
+    )
+    chain = StrategicAnalystChain(vector_store=vs)
+    monkeypatch.setattr(
+        scenario_engine.llm_providers,
+        "get_llm_response",
+        lambda *args, **kwargs: '{"ripple_effects": [], "briefing": {"executive_summary": "ok"}}',
+    )
+
+    result = chain.analyze_scenario("panama canal drought", raw_df)
+
+    vendors = {row["vendor"] for row in result["risk_table"]}
+    assert vendors == {"Retrieved Vendor", "Missed Vendor"}
 
 
 def test_parse_response_invalid_json_raises():
