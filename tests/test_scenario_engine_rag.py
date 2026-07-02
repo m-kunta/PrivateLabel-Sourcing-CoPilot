@@ -134,7 +134,7 @@ def test_analyze_scenario_rag_no_exposed_matches_falls_back(monkeypatch, raw_df)
     assert result == {"source": "fallback", "risk_table": ["used-fallback"]}
 
 
-def test_analyze_scenario_rag_llm_failure_is_wrapped(monkeypatch, raw_df):
+def test_analyze_scenario_rag_llm_failure_is_degraded(monkeypatch, raw_df):
     vs = FakeVectorStore(
         ready=True,
         lead_time_context=[
@@ -160,8 +160,41 @@ def test_analyze_scenario_rag_llm_failure_is_wrapped(monkeypatch, raw_df):
 
     monkeypatch.setattr(scenario_engine.llm_providers, "get_llm_response", bad_llm)
 
-    with pytest.raises(ValueError, match="Failed to generate scenario analysis: provider offline"):
-        chain.analyze_scenario("red sea closure", raw_df)
+    result = chain.analyze_scenario("red sea closure", raw_df)
+
+    assert result["source"] == "rag+llm-degraded"
+    assert result["risk_table"][0]["vendor"] == "Vector Vendor"
+    assert "Briefing generation failed: provider offline" in result["ripple_effects"][0]["downstream_impacts"]
+
+
+def test_analyze_scenario_rag_llm_failure_returns_degraded_schema(monkeypatch, raw_df):
+    vs = FakeVectorStore(
+        ready=True,
+        lead_time_context=[
+            {
+                "vendor_name": "Vector Vendor",
+                "component": "Wood Pulp",
+                "category": "Wood/Furniture",
+                "origin_port": "Genoa",
+                "origin_country": "Italy",
+                "base_lead_days": 45,
+                "suez_canal_exposure": 1,
+            }
+        ],
+    )
+    chain = StrategicAnalystChain(vector_store=vs)
+
+    def bad_llm(*args, **kwargs):
+        raise RuntimeError("provider offline")
+
+    monkeypatch.setattr(scenario_engine.llm_providers, "get_llm_response", bad_llm)
+
+    result = chain.analyze_scenario("red sea closure", raw_df)
+
+    assert result["source"] == "rag+llm-degraded"
+    assert result["risk_table"][0]["vendor"] == "Vector Vendor"
+    assert "executive_summary" in result["briefing"]
+    assert result["ripple_effects"]
 
 
 def test_parse_response_invalid_json_raises():

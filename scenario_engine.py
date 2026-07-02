@@ -71,18 +71,55 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
     def _parse_response(self, text: str) -> Dict[str, Any]:
         """Safely parses JSON, stripping markdown code blocks if necessary."""
         try:
-            return json.loads(text)
+            return self._normalize_response(json.loads(text))
         except json.JSONDecodeError:
             pass
             
         match = re.search(r'\{.*\}', text, re.DOTALL)
         if match:
             try:
-                return json.loads(match.group(0))
+                return self._normalize_response(json.loads(match.group(0)))
             except json.JSONDecodeError:
                 pass
                 
         raise ValueError(f"Failed to parse LLM response into JSON. Raw output: {text[:200]}...")
+
+    def _normalize_response(self, parsed: Dict[str, Any]) -> Dict[str, Any]:
+        briefing = parsed.get("briefing") if isinstance(parsed.get("briefing"), dict) else {}
+        parsed["risk_table"] = parsed.get("risk_table") if isinstance(parsed.get("risk_table"), list) else []
+        parsed["ripple_effects"] = parsed.get("ripple_effects") if isinstance(parsed.get("ripple_effects"), list) else []
+        parsed["briefing"] = {
+            "executive_summary": briefing.get("executive_summary", ""),
+            "key_findings": briefing.get("key_findings") if isinstance(briefing.get("key_findings"), list) else [],
+            "affected_categories": briefing.get("affected_categories") if isinstance(briefing.get("affected_categories"), list) else [],
+            "recommended_actions": briefing.get("recommended_actions") if isinstance(briefing.get("recommended_actions"), list) else [],
+            "risk_horizon": briefing.get("risk_horizon", "Unknown"),
+        }
+        return parsed
+
+    def _degraded_result(
+        self,
+        scenario: str,
+        risk_table: List[Dict[str, Any]],
+        source: str,
+        error: Exception,
+    ) -> Dict[str, Any]:
+        return {
+            "risk_table": risk_table,
+            "ripple_effects": [{
+                "primary_disruption": scenario,
+                "affected_route": "Multiple",
+                "downstream_impacts": [f"Briefing generation failed: {error}"],
+            }],
+            "briefing": {
+                "executive_summary": "Risk table generated successfully, but the LLM briefing could not be produced.",
+                "key_findings": ["Structured risk scoring completed", "Narrative briefing unavailable"],
+                "affected_categories": sorted({row.get("category", "Unknown") for row in risk_table}),
+                "recommended_actions": ["Review the risk table and contact affected vendors directly"],
+                "risk_horizon": "Unknown",
+            },
+            "source": source,
+        }
 
     def _classify_risk(self, base: int, adjusted: int) -> str:
         return classify_risk(base, adjusted)
@@ -111,18 +148,7 @@ Always respond in valid JSON. Do not include markdown code fences in your respon
             parsed["source"] = "fallback"
             return parsed
         except Exception as e:
-            return {
-                "risk_table": risk_table,
-                "ripple_effects": [{"primary_disruption": scenario, "affected_route": "Multiple", "downstream_impacts": [f"LLM Error: {e}"]}],
-                "briefing": {
-                    "executive_summary": "System operated in degraded fallback mode with LLM failure.",
-                    "key_findings": ["LLM generation failed", "Heuristics applied directly"],
-                    "affected_categories": [],
-                    "recommended_actions": ["Review detailed risk table manually"],
-                    "risk_horizon": "Unknown"
-                },
-                "source": "fallback"
-            }
+            return self._degraded_result(scenario, risk_table, "fallback", e)
 
     def analyze_scenario(self, scenario: str, raw_df: pd.DataFrame) -> Dict[str, Any]:
         if not self.vs or not self.vs.is_ready():
@@ -176,4 +202,4 @@ Respond strictly with this JSON schema (no markdown fences):
             parsed["source"] = "rag+llm"
             return parsed
         except Exception as e:
-            raise ValueError(f"Failed to generate scenario analysis: {e}")
+            return self._degraded_result(scenario, risk_table, "rag+llm-degraded", e)

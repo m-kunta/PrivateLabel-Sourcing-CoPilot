@@ -96,6 +96,18 @@ Have a good day!
     assert type(parsed["risk_table"]) is list
 
 
+def test_parse_response_normalizes_missing_sections():
+    chain = StrategicAnalystChain(vector_store=None)
+
+    parsed = chain._parse_response('{"briefing": {"executive_summary": "Only summary"}}')
+
+    assert parsed["risk_table"] == []
+    assert parsed["ripple_effects"] == []
+    assert parsed["briefing"]["executive_summary"] == "Only summary"
+    assert parsed["briefing"]["key_findings"] == []
+    assert parsed["briefing"]["recommended_actions"] == []
+
+
 def test_fallback_schema_fallback(mock_df):
     chain = StrategicAnalystChain(vector_store=None)
     original_get_llm_response = scenario_engine.llm_providers.get_llm_response
@@ -110,7 +122,7 @@ def test_fallback_schema_fallback(mock_df):
         assert res["source"] == "fallback"
         assert len(res["risk_table"]) == 1
         assert "executive_summary" in res["briefing"]
-        assert "System operated in degraded fallback mode" in res["briefing"]["executive_summary"]
+        assert "Risk table generated successfully" in res["briefing"]["executive_summary"]
     finally:
         scenario_engine.llm_providers.get_llm_response = original_get_llm_response
 
