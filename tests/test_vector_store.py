@@ -210,6 +210,7 @@ def test_ingest_disruptions_upserts_expected_namespace(monkeypatch):
     upsert = vs.index.upserts[0]
     assert upsert["namespace"] == "disruptions"
     assert upsert["vectors"][0]["metadata"]["affected_routes"] == "Asia-East Coast"
+    assert upsert["vectors"][0]["metadata"]["affected_routes_json"] == '["Asia-East Coast"]'
 
 
 def test_query_returns_metadata(monkeypatch):

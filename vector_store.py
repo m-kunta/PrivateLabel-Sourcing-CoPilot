@@ -2,6 +2,7 @@
 # GitHub: https://github.com/m-kunta
 
 import os
+import json
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any, Optional
@@ -147,6 +148,7 @@ class VectorStore:
                 "location": event["location"],
                 "severity": event["severity"],
                 "affected_routes": ", ".join(event["affected_routes"]),
+                "affected_routes_json": json.dumps(event["affected_routes"]),
                 "date": event["date"],
                 "source": event["source"],
                 "headline": event["headline"],
